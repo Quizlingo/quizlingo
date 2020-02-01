@@ -1,21 +1,21 @@
 package com.quizlingo.verticalprototype
 
-import android.os.AsyncTask
+import android.app.Application
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class DatabasePrototypeActivity : AppCompatActivity() {
+class ShowDecksActivity : AppCompatActivity() {
 
     data class DeckItemModel(val type: ModelType, val data: DatabaseComponent.Deck?) {
         enum class ModelType {
@@ -26,16 +26,16 @@ class DatabasePrototypeActivity : AppCompatActivity() {
     open class CustomViewHolder(heldView: View) : RecyclerView.ViewHolder(heldView)
 
     class DeckItemViewHolder(heldView: View) : CustomViewHolder(heldView) {
-        private val view: ConstraintLayout = heldView as ConstraintLayout
-        val name: TextView = view.findViewById(R.id.deck_name)
-        val count: TextView = view.findViewById(R.id.deck_card_count)
-        val description: TextView = view.findViewById(R.id.deck_description)
+        val root: ConstraintLayout = heldView as ConstraintLayout
+        val name: TextView = root.findViewById(R.id.deck_name)
+        val count: TextView = root.findViewById(R.id.deck_card_count)
+        val description: TextView = root.findViewById(R.id.deck_description)
 
     }
 
     class AddItemViewHolder(heldView: View) : CustomViewHolder(heldView) {
-        private val view: ConstraintLayout = heldView as ConstraintLayout
-        val button: Button = view.findViewById(R.id.add_item_button)
+        val root: ConstraintLayout = heldView as ConstraintLayout
+        val button: Button = root.findViewById(R.id.add_item_button)
     }
 
     class DeckItemViewAdapter(var data: List<DeckItemModel>) : RecyclerView.Adapter<CustomViewHolder>() {
@@ -63,10 +63,21 @@ class DatabasePrototypeActivity : AppCompatActivity() {
                     holder.name.text = item.data!!.deckName
                     holder.count.text = holder.count.resources.getQuantityString(R.plurals.cards, item.data!!.deckCardCount, item.data!!.deckCardCount)
                     holder.description.text = item.data!!.deckDescription
+                    holder.root.setOnClickListener{
+                        val intent = Intent(holder.root.context, EditDeckActivity::class.java)
+                        intent.putExtra(EditDeckActivity.editModeKey, EditDeckActivity.EditModes.EDIT)
+                        intent.putExtra(EditDeckActivity.editDeckIdKey, item.data!!.id)
+                        holder.root.context.startActivity(intent)
+                    }
+
                 }
                 DeckItemModel.ModelType.ADD_BUTTON -> {
                     val holder = holder as AddItemViewHolder
-                    // TODO: add an onClickListener to holder.button that switches to the "creating a new deck" activity
+                    holder.button.setOnClickListener {
+                        val intent = Intent(holder.button.context, EditDeckActivity::class.java)
+                        intent.putExtra(EditDeckActivity.editModeKey, EditDeckActivity.EditModes.NEW)
+                        holder.button.context.startActivity(intent)
+                    }
                 }
             }
         }
@@ -81,30 +92,48 @@ class DatabasePrototypeActivity : AppCompatActivity() {
         }
     }
 
+    class ShowDecksViewModel : ViewModel() {
+        var data: MutableLiveData<List<DatabaseComponent.Deck>> = MutableLiveData<List<DatabaseComponent.Deck>>().also{it.value = mutableListOf()}
+    }
+
     private lateinit var viewAdapter: DeckItemViewAdapter
+    private lateinit var viewModel: ShowDecksViewModel
     private lateinit var database: DatabaseComponent.AppDatabase
-    private val data: MutableLiveData<List<DatabaseComponent.Deck>> = MutableLiveData()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_database_prototype)
+        setContentView(R.layout.activity_show_deck)
 
-        database = DatabaseComponent(this).getDatabase()
+        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                return modelClass.getConstructor().newInstance()
+            }
+        }).get(ShowDecksViewModel::class.java)
 
-        // FIXME: Instead of displaying an empty list, some sort of loading icon should be displayed until the list is loaded
-        data.value = listOf()
+        database = DatabaseComponent.getDatabase(this)
+
+        /*if(viewModel.data.value == null) {
+            // FIXME: Instead of displaying an empty list, some sort of loading icon should be displayed until the list is loaded
+        }*/
 
         var recyclerView: RecyclerView = findViewById(R.id.deck_list_view)
 
-        viewAdapter = DeckItemViewAdapter(data.value!!.map{DeckItemModel(DeckItemModel.ModelType.DECK, it)} + DeckItemModel(DeckItemModel.ModelType.ADD_BUTTON, null))
+        viewAdapter = DeckItemViewAdapter(viewModel.data.value!!.map{DeckItemModel(DeckItemModel.ModelType.DECK, it)} + DeckItemModel(DeckItemModel.ModelType.ADD_BUTTON, null))
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         recyclerView.adapter = viewAdapter
 
-        data.observe(this, Observer { items: List<DatabaseComponent.Deck> ->
+        viewModel.data.observe(this, Observer { items: List<DatabaseComponent.Deck> ->
             viewAdapter.updateData(items.map{DeckItemModel(DeckItemModel.ModelType.DECK, it)} + DeckItemModel(DeckItemModel.ModelType.ADD_BUTTON, null))
         })
 
-        LoadDecksTask(database, data).execute()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i("ShowDecksActivity", "resuming")
+        database.deckDao().getDecks().observe(this, Observer {
+            viewModel.data.value = it
+        })
     }
 }

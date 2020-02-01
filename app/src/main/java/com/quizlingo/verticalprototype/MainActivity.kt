@@ -12,7 +12,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         findViewById<Button>(R.id.start_database_prototype_button).setOnClickListener {
-            startActivity(Intent(this, DatabasePrototypeActivity::class.java))
+            startActivity(Intent(this, ShowDecksActivity::class.java))
         }
     }
 }

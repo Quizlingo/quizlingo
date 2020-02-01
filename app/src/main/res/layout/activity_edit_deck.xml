@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:scrollbars="vertical"
-    tools:context=".DatabasePrototypeActivity"
+    tools:context=".ShowDecksActivity"
 
-    android:id="@+id/deck_list_view"
+    android:id="@+id/deck_edit_view"
     >
 
 </androidx.recyclerview.widget.RecyclerView>
