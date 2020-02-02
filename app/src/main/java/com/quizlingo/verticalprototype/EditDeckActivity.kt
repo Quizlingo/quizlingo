@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -177,6 +178,9 @@ class EditDeckActivity : AppCompatActivity() {
     private lateinit var viewModel: EditDeckViewModel
     private lateinit var database: DatabaseComponent.AppDatabase
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_deck)
@@ -188,6 +192,9 @@ class EditDeckActivity : AppCompatActivity() {
         }).get(EditDeckViewModel::class.java)
 
         database = DatabaseComponent.getDatabase(this)
+
+        progressBar = findViewById(R.id.edit_list_loading_bar)
+        recyclerView = findViewById(R.id.deck_edit_view)
 
         if(viewModel.deck.value == null) {
 
@@ -202,17 +209,18 @@ class EditDeckActivity : AppCompatActivity() {
 
                 database.cardDao().getCardsByDeck(deckId).observe(this, Observer {
                     viewModel.cards.value = it
+                    hideLoadingBar()
                 })
                 database.deckDao().getDeckById(deckId).observe(this, Observer {
                     viewModel.deck.value = it
+                    hideLoadingBar()
                 })
             } else {
-               viewModel.newDeck()
+                viewModel.newDeck()
+                hideLoadingBar()
             }
         }
 
-
-        val recyclerView: RecyclerView = findViewById(R.id.deck_edit_view)
         viewAdapter = EditCardViewAdapter()
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
@@ -265,6 +273,13 @@ class EditDeckActivity : AppCompatActivity() {
             SaveDeckTask(database.deckDao(), null).execute(viewModel.deck.value!!)
             viewModel.cards.value!!.forEach{it.deckId = viewModel.deck.value!!.id}
             SaveCardsTask(database.cardDao()).execute(*viewModel.cards.value!!.toTypedArray())
+        }
+    }
+
+    private fun hideLoadingBar() {
+        if(viewModel.deck.value != null && viewModel.cards.value != null) {
+            progressBar.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
         }
     }
 }

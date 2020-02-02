@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.*
@@ -100,6 +101,9 @@ class ShowDecksActivity : AppCompatActivity() {
     private lateinit var viewModel: ShowDecksViewModel
     private lateinit var database: DatabaseComponent.AppDatabase
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_show_deck)
@@ -116,7 +120,8 @@ class ShowDecksActivity : AppCompatActivity() {
             // FIXME: Instead of displaying an empty list, some sort of loading icon should be displayed until the list is loaded
         }*/
 
-        var recyclerView: RecyclerView = findViewById(R.id.deck_list_view)
+        recyclerView = findViewById(R.id.deck_list_view)
+        progressBar = findViewById(R.id.deck_list_loading_bar)
 
         viewAdapter = DeckItemViewAdapter(viewModel.data.value!!.map{DeckItemModel(DeckItemModel.ModelType.DECK, it)} + DeckItemModel(DeckItemModel.ModelType.ADD_BUTTON, null))
         recyclerView.setHasFixedSize(true)
@@ -134,6 +139,16 @@ class ShowDecksActivity : AppCompatActivity() {
         Log.i("ShowDecksActivity", "resuming")
         database.deckDao().getDecks().observe(this, Observer {
             viewModel.data.value = it
+
+            progressBar.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
         })
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        progressBar.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
     }
 }
