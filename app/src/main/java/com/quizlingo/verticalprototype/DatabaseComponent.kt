@@ -5,35 +5,6 @@ import android.os.AsyncTask
 import androidx.lifecycle.LiveData
 import androidx.room.*
 
-class SaveDeckTask(private val dao: DatabaseComponent.DeckDao, private val then: ((Long) -> Unit)?) : AsyncTask<DatabaseComponent.Deck, Void, Long>() {
-    override fun doInBackground(vararg params: DatabaseComponent.Deck?): Long {
-        return if(params[0]!!.id == 0L) {
-            dao.insert(params[0]!!)
-        } else {
-            dao.update(params[0]!!)
-            params[0]!!.id
-        }
-    }
-
-    override fun onPostExecute(result: Long?) {
-        then?.invoke(result!!)
-    }
-}
-
-class SaveCardsTask(private val dao: DatabaseComponent.CardDao) : AsyncTask<DatabaseComponent.Card, Void, Unit>() {
-    override fun doInBackground(vararg params: DatabaseComponent.Card?) {
-        params.forEach {
-            if(it != null) {
-                if(it.id == 0L) {
-                    dao.insert(it)
-                } else {
-                    dao.update(it)
-                }
-            }
-        }
-    }
-}
-
 class DatabaseComponent(val context: Context) {
 
     @Entity(tableName = "decks")
@@ -56,13 +27,13 @@ class DatabaseComponent(val context: Context) {
         fun getDeckByPosition(n: Int): LiveData<Deck>
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
-        fun insert(deck: Deck): Long
+        suspend fun insert(deck: Deck): Long
 
         @Update
-        fun update(deck: Deck)
+        suspend fun update(deck: Deck)
 
         @Delete
-        fun delete(deck: Deck)
+        suspend fun delete(deck: Deck)
     }
 
     @Entity(tableName = "cards")
@@ -82,19 +53,19 @@ class DatabaseComponent(val context: Context) {
         fun getCardById(cardId: Long): LiveData<Card>
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
-        fun insert(card: Card): Long
+        suspend fun insert(card: Card): Long
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
-        fun insertMany(cards: List<Card>)
+        suspend fun insertMany(cards: List<Card>)
 
         @Update
-        fun update(card: Card)
+        suspend fun update(card: Card)
 
         @Update
-        fun updateMany(cards: List<Card>)
+        suspend fun updateMany(cards: List<Card>)
 
         @Delete
-        fun delete(card: Card)
+        suspend fun delete(card: Card)
     }
 
     @Database(entities = [Deck::class, Card::class], version = 1)

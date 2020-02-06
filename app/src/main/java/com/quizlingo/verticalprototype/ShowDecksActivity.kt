@@ -108,11 +108,7 @@ class ShowDecksActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_show_deck)
 
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                return modelClass.getConstructor().newInstance()
-            }
-        }).get(ShowDecksViewModel::class.java)
+        viewModel = ViewModelProvider(this)[ShowDecksViewModel::class.java]
 
         database = DatabaseComponent.getDatabase(this)
 
@@ -132,7 +128,10 @@ class ShowDecksActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.i("ShowDecksActivity", "resuming")
+
+        progressBar.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+
         database.deckDao().getDecks().observe(this, Observer {
             viewModel.data.value = it
 
@@ -141,10 +140,4 @@ class ShowDecksActivity : AppCompatActivity() {
         })
     }
 
-    override fun onPause() {
-        super.onPause()
-
-        progressBar.visibility = View.VISIBLE
-        recyclerView.visibility = View.GONE
-    }
 }

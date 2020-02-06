@@ -162,29 +162,48 @@ class EditDeckActivity : AppCompatActivity() {
         var cards: MutableLiveData<List<DatabaseComponent.Card>> = MutableLiveData()
         var deck: MutableLiveData<DatabaseComponent.Deck> = MutableLiveData()
 
-        var saved: MutableLiveData<Boolean> = MutableLiveData<Boolean>().also{it.value = false}
+        enum class EditState{
+            LOADING, EDITING, SAVING, FINISHING
+        }
+
+        var state: MutableLiveData<EditState> = MutableLiveData<EditState>().also{it.value = EditState.LOADING}
 
         fun newDeck() {
             cards.value = mutableListOf()
             deck.value = DatabaseComponent.Deck(0L, "", "", 0)
         }
 
+        fun checkIfLoaded() {
+            if(cards.value != null && deck.value != null) {
+                state.value = EditState.EDITING
+            }
+        }
+
         fun saveDeck(deckDao: DatabaseComponent.DeckDao, cardDao: DatabaseComponent.CardDao) {
+            state.value = EditState.SAVING
             viewModelScope.launch {
                 if (deck.value == null || cards.value == null) {
                     Log.w("EditDeckActivity", "Cannot save uninitialized deck")
+                    state.value = EditState.EDITING
+                    return@launch
+                }
+                if(deck.value!!.deckName.isBlank()) {
+                    Log.w("EditDeckActivity", "Cannot save nameless deck")
+                    state.value = EditState.EDITING
                     return@launch
                 }
                 deck.value!!.deckCardCount = cards.value!!.size
 
+                var deckId: Long = deck.value!!.id
+
                 if(deck.value!!.id == 0L) {
-                    deckDao.insert(deck.value!!)
+                    deckId = deckDao.insert(deck.value!!)
                 } else {
                     deckDao.update(deck.value!!)
                 }
 
                 cards.value!!.forEach{
-                    it.deckId = deck.value!!.id
+                    it.deckId = deckId
                     if(it.id == 0L) {
                         cardDao.insert(it)
                     } else {
@@ -192,7 +211,7 @@ class EditDeckActivity : AppCompatActivity() {
                     }
                 }
 
-                saved.value = true
+                state.value = EditState.FINISHING
             }
         }
 
@@ -211,43 +230,59 @@ class EditDeckActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
 
+    private fun respondToStateChange(state: EditDeckViewModel.EditState) {
+        when(state) {
+            EditDeckViewModel.EditState.LOADING -> {
+                showLoadingBar()
+            }
+            EditDeckViewModel.EditState.EDITING -> {
+                hideLoadingBar()
+            }
+            EditDeckViewModel.EditState.SAVING -> {
+                showLoadingBar()
+            }
+            EditDeckViewModel.EditState.FINISHING -> {
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_deck)
 
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                return modelClass.getConstructor().newInstance()
-            }
-        }).get(EditDeckViewModel::class.java)
+        viewModel = ViewModelProvider(this)[EditDeckViewModel::class.java]
 
         database = DatabaseComponent.getDatabase(this)
 
         progressBar = findViewById(R.id.edit_list_loading_bar)
         recyclerView = findViewById(R.id.deck_edit_view)
 
-        if(viewModel.deck.value == null) {
+        viewModel.state.observe(this, Observer {
+            respondToStateChange(it)
+        })
+        // Need to check if the activity changed while the activity was being created
+        // (Such as if the user rotated the device while the cards were being saved)
+        respondToStateChange(viewModel.state.value!!)
 
+        if(viewModel.state.value!! == EditDeckViewModel.EditState.LOADING) {
             if(intent.getSerializableExtra(editModeKey) == EditModes.EDIT) {
-                val def = -1L
-                val deckId = intent.getLongExtra(editDeckIdKey, def)
+                val def = 0L
+                val deckId = intent.getLongExtra(editDeckIdKey, 0)
                 if(deckId == def) {
-                    // I'm not sure that deck ids are guaranteed to be positive, so I don't want to throw an error here
-                    // However, it is mighty suspicious if the deck id matches the default value, so print a warning
-                    Log.w("EditDeckActivity", "Deck ID matches default value")
+                    throw IllegalArgumentException("Invalid deck id")
                 }
-
                 database.cardDao().getCardsByDeck(deckId).observe(this, Observer {
                     viewModel.cards.value = it
-                    hideLoadingBar()
+                    viewModel.checkIfLoaded()
                 })
                 database.deckDao().getDeckById(deckId).observe(this, Observer {
                     viewModel.deck.value = it
-                    hideLoadingBar()
+                    viewModel.checkIfLoaded()
                 })
             } else {
                 viewModel.newDeck()
-                hideLoadingBar()
+                viewModel.checkIfLoaded()
             }
         }
 
@@ -272,15 +307,6 @@ class EditDeckActivity : AppCompatActivity() {
             viewAdapter.updateDeck(it)
         })
 
-
-        viewModel.saved.observe(this, Observer {
-            if(it)
-                finish()
-        })
-        if(viewModel.saved.value != null && viewModel.saved.value!!) {
-            finish()
-        }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -291,7 +317,6 @@ class EditDeckActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.saveButton -> {
-                showLoadingBar()
                 viewModel.saveDeck(database.deckDao(), database.cardDao())
                 true
             }
@@ -305,9 +330,7 @@ class EditDeckActivity : AppCompatActivity() {
     }
 
     private fun hideLoadingBar() {
-        if(viewModel.deck.value != null && viewModel.cards.value != null) {
-            progressBar.visibility = View.GONE
-            recyclerView.visibility = View.VISIBLE
-        }
+        progressBar.visibility = View.GONE
+        recyclerView.visibility = View.VISIBLE
     }
 }
