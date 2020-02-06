@@ -116,10 +116,6 @@ class ShowDecksActivity : AppCompatActivity() {
 
         database = DatabaseComponent.getDatabase(this)
 
-        /*if(viewModel.data.value == null) {
-            // FIXME: Instead of displaying an empty list, some sort of loading icon should be displayed until the list is loaded
-        }*/
-
         recyclerView = findViewById(R.id.deck_list_view)
         progressBar = findViewById(R.id.deck_list_loading_bar)
 

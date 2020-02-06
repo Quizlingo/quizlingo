@@ -13,6 +13,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 
 class EditDeckActivity : AppCompatActivity() {
 
@@ -161,9 +162,38 @@ class EditDeckActivity : AppCompatActivity() {
         var cards: MutableLiveData<List<DatabaseComponent.Card>> = MutableLiveData()
         var deck: MutableLiveData<DatabaseComponent.Deck> = MutableLiveData()
 
+        var saved: MutableLiveData<Boolean> = MutableLiveData<Boolean>().also{it.value = false}
+
         fun newDeck() {
             cards.value = mutableListOf()
             deck.value = DatabaseComponent.Deck(0L, "", "", 0)
+        }
+
+        fun saveDeck(deckDao: DatabaseComponent.DeckDao, cardDao: DatabaseComponent.CardDao) {
+            viewModelScope.launch {
+                if (deck.value == null || cards.value == null) {
+                    Log.w("EditDeckActivity", "Cannot save uninitialized deck")
+                    return@launch
+                }
+                deck.value!!.deckCardCount = cards.value!!.size
+
+                if(deck.value!!.id == 0L) {
+                    deckDao.insert(deck.value!!)
+                } else {
+                    deckDao.update(deck.value!!)
+                }
+
+                cards.value!!.forEach{
+                    it.deckId = deck.value!!.id
+                    if(it.id == 0L) {
+                        cardDao.insert(it)
+                    } else {
+                        cardDao.update(it)
+                    }
+                }
+
+                saved.value = true
+            }
         }
 
     }
@@ -242,6 +272,15 @@ class EditDeckActivity : AppCompatActivity() {
             viewAdapter.updateDeck(it)
         })
 
+
+        viewModel.saved.observe(this, Observer {
+            if(it)
+                finish()
+        })
+        if(viewModel.saved.value != null && viewModel.saved.value!!) {
+            finish()
+        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -252,28 +291,17 @@ class EditDeckActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.saveButton -> {
-                saveCards()
-                finish()
+                showLoadingBar()
+                viewModel.saveDeck(database.deckDao(), database.cardDao())
                 true
             }
             else  -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun saveCards() {
-        viewModel.deck.value!!.deckCardCount = viewModel.cards.value!!.size
-        if (viewModel.deck.value == null || viewModel.cards.value == null) {
-            Log.w("EditDeckActivity", "Cannot save uninitialized deck")
-        }else if(viewModel.deck.value!!.id == 0L) {
-            SaveDeckTask(database.deckDao()) {deckId: Long ->
-                viewModel.cards.value!!.forEach{it.deckId = deckId}
-                SaveCardsTask(database.cardDao()).execute(*(viewModel.cards.value!!.toTypedArray()))
-            }.execute(viewModel.deck.value!!)
-        } else {
-            SaveDeckTask(database.deckDao(), null).execute(viewModel.deck.value!!)
-            viewModel.cards.value!!.forEach{it.deckId = viewModel.deck.value!!.id}
-            SaveCardsTask(database.cardDao()).execute(*viewModel.cards.value!!.toTypedArray())
-        }
+    private fun showLoadingBar() {
+        progressBar.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
     }
 
     private fun hideLoadingBar() {

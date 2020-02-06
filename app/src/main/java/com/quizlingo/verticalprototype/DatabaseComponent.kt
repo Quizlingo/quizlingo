@@ -55,7 +55,7 @@ class DatabaseComponent(val context: Context) {
         @Query("SELECT * FROM decks ORDER BY id ASC LIMIT 1 OFFSET :n")
         fun getDeckByPosition(n: Int): LiveData<Deck>
 
-        @Insert
+        @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun insert(deck: Deck): Long
 
         @Update
@@ -81,10 +81,10 @@ class DatabaseComponent(val context: Context) {
         @Query("SELECT * FROM cards WHERE id LIKE :cardId")
         fun getCardById(cardId: Long): LiveData<Card>
 
-        @Insert
+        @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun insert(card: Card): Long
 
-        @Insert
+        @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun insertMany(cards: List<Card>)
 
         @Update
@@ -113,7 +113,7 @@ class DatabaseComponent(val context: Context) {
                 return tempInstance
             }
             synchronized(this) {
-                val tempInstance = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "cardsDB").build()
+                val tempInstance = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "cards.db").build()
                 instance = tempInstance
                 return tempInstance
             }
