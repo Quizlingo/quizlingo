@@ -6,16 +6,17 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
-import java.util.*
 
 class AuthDemoActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private val RC_SIGN_IN = 123;
-    private lateinit var button: Button
+    private lateinit var signInButton: Button
+    private lateinit var signOutButton: Button
     private lateinit var text: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,11 +25,15 @@ class AuthDemoActivity : AppCompatActivity() {
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
         auth.signOut()
-        button = findViewById<Button>(R.id.signin)
+        signInButton = findViewById<Button>(R.id.signin)
+        signOutButton = findViewById<Button>(R.id.signout)
         text = findViewById<TextView>(R.id.status)
-        button.setOnClickListener { launchSignInFlow() }
-        findViewById<Button>(R.id.signout).apply {
-            setOnClickListener { auth.signOut() }
+        signInButton.setOnClickListener { launchSignInFlow() }
+        signOutButton.setOnClickListener {
+            AuthUI.getInstance().signOut(this).addOnCompleteListener {
+                text.text = "Signed out!"
+                signOutButton.visibility = LinearLayout.INVISIBLE
+            }
         }
     }
 
@@ -58,7 +63,8 @@ class AuthDemoActivity : AppCompatActivity() {
         if (requestCode == RC_SIGN_IN) {
             val response = IdpResponse.fromResultIntent(data)
             if (resultCode == Activity.RESULT_OK) {
-                text.text = "Signed in" + FirebaseAuth.getInstance().currentUser?.displayName
+                text.text = "Signed in: " + FirebaseAuth.getInstance().currentUser?.displayName
+                signOutButton.visibility = LinearLayout.VISIBLE
             } else {
                 Log.e("Firebase", "Sign in unsuccessful ${response?.error?.errorCode}")
             }
