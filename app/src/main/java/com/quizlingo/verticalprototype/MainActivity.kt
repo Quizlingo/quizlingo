@@ -3,61 +3,75 @@ package com.quizlingo.verticalprototype
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var input: EditText
+    private lateinit var list: ViewGroup
+
+    private val FIRST_NAME = "first"
+    private val LAST_NAME = "last"
+    private val TAG = "TESTING"
+
+    private lateinit var nameTextView: TextView
+
+    private var myDocRef = FirebaseFirestore.getInstance().document("users/names")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val db = FirebaseFirestore.getInstance()
-        val TAG = "Test"
+        nameTextView = findViewById(R.id.name)
 
-        // Create a new user with a first and last name
-        val user1 = hashMapOf(
-            "first" to "Ada",
-            "last" to "Lovelace",
-            "born" to 1815
-        )
+        findViewById<Button>(R.id.save).setOnClickListener{ saveName() }
+        findViewById<Button>(R.id.fetch).setOnClickListener{ fetchName()}
 
-        // Add a new document with a generated ID
-        db.collection("users")
-            .add(user1)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
-            }
 
-        // Create a new user with a first, middle, and last name
-        val user2 = hashMapOf(
-            "first" to "Alan",
-            "middle" to "Mathison",
-            "last" to "Turing",
-            "born" to 1912
-        )
+    }
 
-        // Add a new document with a generated ID
-        db.collection("users")
-            .add(user2)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
-            }
+    private fun saveName(){
+        var firstView = findViewById<EditText>(R.id.first)
+        var lastView = findViewById<EditText>(R.id.last)
 
-        db.collection("users")
-            .get()
+        var firstText = firstView.text.toString()
+        var lastText = lastView.text.toString()
+
+        if (firstText.isEmpty() || lastText.isEmpty()){
+            return
+        }
+
+        var dataToSave = hashMapOf<String, Any>()
+        dataToSave.put(FIRST_NAME, firstText)
+        dataToSave.put(LAST_NAME, lastText)
+
+        myDocRef.set(dataToSave)
             .addOnSuccessListener { result ->
-                for (document in result) {
-                    Log.d(TAG, "${document.id} => ${document.data}")
+                Log.d(TAG, "Data has been added")
+            }
+            .addOnFailureListener{ result ->
+                Log.d(TAG, "Data failed to be added!")
+            }
+    }
+
+    private fun fetchName(){
+        myDocRef.get()
+            .addOnSuccessListener { result ->
+                if (result.exists()){
+                    val firstText = result.getString(FIRST_NAME)
+                    val lastText = result.getString(LAST_NAME)
+
+                    nameTextView.setText(firstText + " " + lastText)
                 }
             }
-            .addOnFailureListener { exception ->
-                Log.w(TAG, "Error getting documents.", exception)
+            .addOnFailureListener{ result->
+                Log.d(TAG, "Failed to fetch data")
             }
     }
 }
