@@ -1,4 +1,4 @@
-package com.quizlingo.verticalprototype
+package com.quizlingo.quizlingo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

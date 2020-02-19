@@ -1,4 +1,4 @@
-package com.quizlingo.verticalprototype
+package com.quizlingo.quizlingo
 
 import org.junit.Test
 
