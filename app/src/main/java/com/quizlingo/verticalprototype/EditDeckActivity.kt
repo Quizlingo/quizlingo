@@ -25,21 +25,18 @@ class EditDeckActivity : AppCompatActivity() {
 
     open class CustomViewHolder(heldView: View) : RecyclerView.ViewHolder(heldView)
 
-    class EditDeckViewHolder(heldView: View) : CustomViewHolder(heldView) {
-        private val view: ConstraintLayout = heldView as ConstraintLayout
+    class EditDeckViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
         val name: EditText = view.findViewById(R.id.edit_deck_name)
         val description: EditText = view.findViewById(R.id.edit_deck_description)
     }
 
-    class EditCardViewHolder(heldView: View) : CustomViewHolder(heldView) {
-        private val view: ConstraintLayout = heldView as ConstraintLayout
+    class EditCardViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
         val prompt: EditText = view.findViewById(R.id.edit_prompt)
         val text: EditText = view.findViewById(R.id.edit_text)
 
     }
 
-    class AddItemViewHolder(heldView: View) : CustomViewHolder(heldView) {
-        private val view: ConstraintLayout = heldView as ConstraintLayout
+    class AddItemViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
         val button: Button = view.findViewById(R.id.add_item_button)
     }
 
@@ -56,7 +53,6 @@ class EditDeckActivity : AppCompatActivity() {
             data = if(deck != null && cards != null) {
                 listOf(deck!!) + cards!! + addButton
             } else {
-                // FIXME: Some sort of loading icon should be displayed until the list is loaded, not the add button
                 listOf(addButton)
             }
             notifyDataSetChanged()
@@ -76,15 +72,15 @@ class EditDeckActivity : AppCompatActivity() {
             val inflater: LayoutInflater = LayoutInflater.from(parent.context)
             return when(CardItemModel.ModelType.values()[viewType]) {
                 CardItemModel.ModelType.DECK -> {
-                    val view = inflater.inflate(R.layout.deck_edit_item, parent,false)
+                    val view = inflater.inflate(R.layout.deck_edit_item, parent,false) as ConstraintLayout
                     EditDeckViewHolder(view)
                 }
                 CardItemModel.ModelType.CARD -> {
-                    val view = inflater.inflate(R.layout.card_edit_item, parent, false)
+                    val view = inflater.inflate(R.layout.card_edit_item, parent, false) as ConstraintLayout
                     EditCardViewHolder(view)
                 }
                 CardItemModel.ModelType.ADD_BUTTON -> {
-                    val view = inflater.inflate(R.layout.add_list_item, parent ,false)
+                    val view = inflater.inflate(R.layout.add_list_item, parent ,false) as ConstraintLayout
                     AddItemViewHolder(view)
                 }
             }
@@ -230,23 +226,6 @@ class EditDeckActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
 
-    private fun respondToStateChange(state: EditDeckViewModel.EditState) {
-        when(state) {
-            EditDeckViewModel.EditState.LOADING -> {
-                showLoadingBar()
-            }
-            EditDeckViewModel.EditState.EDITING -> {
-                hideLoadingBar()
-            }
-            EditDeckViewModel.EditState.SAVING -> {
-                showLoadingBar()
-            }
-            EditDeckViewModel.EditState.FINISHING -> {
-                finish()
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_deck)
@@ -259,11 +238,21 @@ class EditDeckActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.deck_edit_view)
 
         viewModel.state.observe(this, Observer {
-            respondToStateChange(it)
+            when(it) {
+                EditDeckViewModel.EditState.LOADING -> {
+                    showLoadingBar()
+                }
+                EditDeckViewModel.EditState.EDITING -> {
+                    hideLoadingBar()
+                }
+                EditDeckViewModel.EditState.SAVING -> {
+                    showLoadingBar()
+                }
+                EditDeckViewModel.EditState.FINISHING -> {
+                    finish()
+                }
+            }
         })
-        // Need to check if the activity changed while the activity was being created
-        // (Such as if the user rotated the device while the cards were being saved)
-        respondToStateChange(viewModel.state.value!!)
 
         if(viewModel.state.value!! == EditDeckViewModel.EditState.LOADING) {
             if(intent.getSerializableExtra(editModeKey) == EditModes.EDIT) {
