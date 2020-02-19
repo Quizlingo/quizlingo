@@ -3,15 +3,13 @@ package com.quizlingo.verticalprototype
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 
-class MainActivity : AppCompatActivity() {
+class FirestoreSetup : AppCompatActivity() {
 
     private lateinit var input: EditText
     private lateinit var list: ViewGroup
@@ -26,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_firestoreSetup)
 
         nameTextView = findViewById(R.id.name)
 
