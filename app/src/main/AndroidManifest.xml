@@ -9,6 +9,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".EditDeckActivity"></activity>
+        <activity android:name=".ShowDecksActivity" />
+        <activity android:name=".MainActivity">
         <activity android:name=".AuthDemoActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
