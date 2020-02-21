@@ -9,6 +9,8 @@ class TestStudyDeck {
     @Test
     fun testStartStudyingCards() {
         val expectedDeck = Deck(1,
+            "Test Deck",
+            "a deck solely for testing",
             listOf(
                 Card(1, 1, "prompt: deck-1 card-1", "answer: deck-1 card-1"),
                 Card(100000000000, 1, "prompt: deck-1 card-100000000000", "answer: deck-1 card-100000000000")
@@ -37,6 +39,8 @@ class TestStudyDeck {
     @Test
     fun testAdvanceToNextCard() {
         val expectedDeck = Deck(1,
+            "Test Deck",
+            "a deck solely for testing",
             listOf(
                 Card(1, 1, "prompt: deck-1 card-1", "answer: deck-1 card-1"),
                 Card(100000000000, 1, "prompt: deck-1 card-100000000000", "answer: deck-1 card-100000000000")
@@ -71,6 +75,8 @@ class TestStudyDeck {
     @Test
     fun testScoreUserResponse() {
         val expectedDeck = Deck(1,
+            "Test Deck",
+            "a deck solely for testing",
             listOf(
                 Card(1, 1, "prompt: deck-1 card-1", "answer: deck-1 card-1"),
                 Card(100000000000, 1, "prompt: deck-1 card-100000000000", "answer: deck-1 card-100000000000")

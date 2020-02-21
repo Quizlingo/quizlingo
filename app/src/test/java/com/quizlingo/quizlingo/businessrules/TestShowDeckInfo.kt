@@ -9,6 +9,8 @@ class TestShowDeckInfo {
     @Test
     fun showDeckInfo() = runBlockingTest {
         val expectedDeck = Deck(100000000000,
+            "Test Deck",
+            "a deck solely for testing",
             listOf(
                 Card(20, 100000000000, "prompt: deck-100000000000 card-20", "answer: deck-100000000000 card-20")
             ),
