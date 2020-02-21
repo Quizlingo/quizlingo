@@ -17,10 +17,10 @@ class TestEditDeckInfo {
             ),
             2
         )
-        Assert.assertEquals(preEditDeck.cardCount, preEditDeck.cards.size)
-        val postEditDeck = Deck(1,
-            "A Different Test Deck",
-            "A new deck also for testing",
+            Assert.assertEquals(preEditDeck.cardCount, preEditDeck.cards.size)
+            val postEditDeck = Deck(1,
+        "A Different Test Deck",
+        "A new deck also for testing",
             listOf(
                 Card(1, 1, "different prompt: deck-1 card-1", "different answer: deck-1 card-1")
             ),
@@ -45,9 +45,15 @@ class TestEditDeckInfo {
             }
         }
 
+        var aboutToDelete = false
+
         val saver = object: DeckSaver {
             override suspend fun saveDeck(deck: Deck) {
                 Assert.assertEquals(postEditDeck, deck)
+            }
+
+            override suspend fun deleteDeck(deck: Deck) {
+                Assert.assertTrue(aboutToDelete)
             }
         }
 
@@ -55,5 +61,8 @@ class TestEditDeckInfo {
 
         editDeckInfo.showCurrentDeckInfo(preEditDeck.deckId)
         editDeckInfo.saveUpdatedDeckInfo()
+
+        aboutToDelete = true
+        editDeckInfo.deleteDeck()
     }
 }
