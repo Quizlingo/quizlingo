@@ -8,4 +8,8 @@ class EditDeckInfo(private val editor: DeckEditor, private val getter: DeckInfoG
     suspend fun saveUpdatedDeckInfo() {
         saver.saveDeck(editor.getUpdatedDeckInfo())
     }
+
+    suspend fun deleteDeck() {
+        saver.deleteDeck(editor.getUpdatedDeckInfo())
+    }
 }
