@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Quizlingo</string>
+    <string name="title_activity_study">Study</string>
 </resources>
