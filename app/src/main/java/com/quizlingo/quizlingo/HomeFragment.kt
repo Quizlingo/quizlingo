@@ -28,7 +28,7 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.home_page, container, false)
 
         viewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
-        adapter = HomeDeckAdapter(requireActivity())
+        adapter = HomeDeckAdapter(requireActivity(), fragment = this)
 
         val decksObserver = Observer<List<Deck>> { newDeck ->
             adapter.setDataSource(newDeck)
@@ -40,13 +40,15 @@ class HomeFragment : Fragment() {
         list.adapter = adapter
         list.layoutManager = LinearLayoutManager(requireActivity())
 
+
         return view
     }
 }
 
 class HomeDeckAdapter(
     private val context: Context,
-    private var dataSource: List<Deck> = Collections.emptyList()
+    private var dataSource: List<Deck> = Collections.emptyList(),
+    private var fragment: Fragment
 ) :
     RecyclerView.Adapter<HomeDeckAdapter.DeckViewHolder>() {
     private val inflater: LayoutInflater =
@@ -79,6 +81,18 @@ class HomeDeckAdapter(
         val deck: Deck = dataSource[position]
 
         holder.title.text = deck.title
+        holder.desc.text = deck.description
+        holder.view.setOnClickListener {
+            val viewModel =
+                ViewModelProvider(fragment.requireActivity()).get(MainViewModel::class.java)
+            val deck = dataSource[position]
+            viewModel.currentDeck.value = deck
+            fragment.parentFragmentManager.beginTransaction()
+                .replace(R.id.content, Study())
+                .addToBackStack(null)
+                .commit()
+        }
+
     }
 
     override fun getItemCount() = dataSource.size
