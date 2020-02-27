@@ -25,15 +25,20 @@ import com.quizlingo.quizlingo.businesslogic.*
 
 class Study : Fragment(), RecognitionListener {
 
-    private val TAG = "SPEECH_REC"
-    private val AUDIO_PERM_REQ = 1000
+    companion object {
+        fun getInstance() = Study()
+
+        private const val TAG = "com.quizlingo.quizlingo.Study.speech_rec"
+        private const val AUDIO_PERM_REQ = 1000
+    }
+
     private lateinit var vm: MainViewModel
     private lateinit var deck: Deck
     private lateinit var cards: List<Card>
-    private lateinit var rpv: RecognitionProgressView
+    private lateinit var recognitionProgressView: RecognitionProgressView
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var card: TextView
-    private var current = 0;
+    private var current = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,28 +49,35 @@ class Study : Fragment(), RecognitionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        vm = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
-        var mld: MutableLiveData<Deck> = vm.currentDeck
+        val activity = requireActivity()
+
+        vm = ViewModelProvider(activity).get(MainViewModel::class.java)
+        val currentDeckLiveData: MutableLiveData<Deck> = vm.currentDeck
 
         val restart = view.findViewById<Button>(R.id.restart)
-        var title = view.findViewById<TextView>(R.id.title)
-        card = view.findViewById<TextView>(R.id.match)
+        val title = view.findViewById<TextView>(R.id.title)
 
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        speechRecognizer.setRecognitionListener(this)
-        rpv = view.findViewById<RecognitionProgressView>(R.id.recognition_view)
-//        rpv.setSpeechRecognizer(speechRecognizer)
+        card = view.findViewById(R.id.match)
 
-        title.setText("Waiting for deck to load...")
-        mld.observe(viewLifecycleOwner, Observer { d ->
-            deck = d
-            title.setText(d.title)
-            cards = d.cards
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(activity)
+        recognitionProgressView = view.findViewById(R.id.recognition_view)
+
+        recognitionProgressView.setSpeechRecognizer(speechRecognizer)
+        recognitionProgressView.setRecognitionListener(this)
+
+
+        // TODO: Extract string resource
+        title.text = "Waiting for deck to load..."
+
+        currentDeckLiveData.observe(viewLifecycleOwner, Observer { newDeck ->
+            deck = newDeck
+            title.text = newDeck.title
+            cards = newDeck.cards
             startFlashcards()
         })
 
         if (ContextCompat.checkSelfPermission(
-                context!!,
+                activity,
                 Manifest.permission.RECORD_AUDIO
             )
             != PackageManager.PERMISSION_GRANTED
@@ -74,10 +86,11 @@ class Study : Fragment(), RecognitionListener {
             // Permission is not granted
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    requireActivity(),
+                    activity,
                     Manifest.permission.RECORD_AUDIO
                 )
             ) {
+                // TODO: Show an explanation
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -89,23 +102,15 @@ class Study : Fragment(), RecognitionListener {
                     AUDIO_PERM_REQ
                 )
             }
-        } else {
-            // Permission has already been granted
         }
-//        rpv.setRecognitionListener(object : RecognitionListenerAdapter() {
-//            override fun onResults(results: Bundle) {
-//                showResults(results)
-//            }
-//        })
 
         restart.setOnClickListener {
-            speechRecognizer.stopListening()
-            displaySpeechRecognizer()
+
+            startSpeechRecognition()
         }
 
-        var cols = listOf<Int>(Color.BLUE)
-        rpv.setColors(cols.toIntArray())
-        rpv.play()
+        var recognitionColors = listOf(Color.BLUE)
+        recognitionProgressView.setColors(recognitionColors.toIntArray())
     }
 
     override fun onRequestPermissionsResult(
@@ -119,6 +124,7 @@ class Study : Fragment(), RecognitionListener {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                 } else {
+                    // TODO
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
@@ -133,32 +139,31 @@ class Study : Fragment(), RecognitionListener {
         }
     }
 
-    private fun displaySpeechRecognizer() {
-
+    private fun startSpeechRecognition() {
+        speechRecognizer.stopListening()
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
         }
-//        if(Permission.)
+        recognitionProgressView.play()
         speechRecognizer.startListening(intent)
-//        startActivityForResult(intent, SPEECH_REQUEST_CODE)
     }
 
     private fun startFlashcards() {
         if (deck.cardCount == current) {
             finishFlashcards()
         } else {
-            card.setText(cards.get(current).prompt)
-            displaySpeechRecognizer()
+            card.text = cards[current].prompt
+            startSpeechRecognition()
         }
     }
 
     private fun finishFlashcards() {
-        card.setText("")
+        card.text = ""
         speechRecognizer.stopListening()
-        Toast.makeText(context, "You finished the deck!", Toast.LENGTH_LONG)
+        Toast.makeText(context, "You finished the deck!", Toast.LENGTH_LONG).show()
     }
 
     override fun onReadyForSpeech(params: Bundle?) {
@@ -199,10 +204,11 @@ class Study : Fragment(), RecognitionListener {
 
     override fun onResults(results: Bundle?) {
 //        Log.d(TAG, "onReadyForSpeech")
+
         val data = results?.getStringArrayList("results_recognition")
 
-        val spokenText: String? = if (data != null) data[0] else ""
-        var ans = cards.get(current).answer
+        val spokenText: String? = data?.get(0) ?: ""
+        val ans = cards[current].answer
         if (ans == spokenText!!.toLowerCase()) {
             Toast.makeText(context, "CORRECT!!", Toast.LENGTH_LONG).show()
             current++

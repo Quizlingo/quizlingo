@@ -13,9 +13,12 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
-        supportFragmentManager.beginTransaction()
-            .add(R.id.content, HomeFragment())
-            .commit()
+        if(savedInstanceState == null) {
+            supportFragmentManager.beginTransaction().apply {
+                replace(R.id.content, HomeFragment.getInstance())
+                commit()
+            }
+        }
     }
 }
 
