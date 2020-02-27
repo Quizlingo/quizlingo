@@ -16,25 +16,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var allDecksGetter: AllDecksGetter
     private var singleDeckSaver: DeckSaver
 
+    private fun isValidDeck(deck: Deck) = deck.title.isNotBlank()
+
     init {
         val db = PersistenceDatabase(application)
         allDecksGetter = db
         singleDeckSaver = db
 
         currentDeck.observeForever { deck: Deck ->
-            if(allDecks.value!!.find{it.deckId == deck.deckId} != null) {
-                // Update existing deck
-                allDecks.value = allDecks.value!!.map{ if(it.deckId == deck.deckId) deck else it }
-            } else {
-                // Add a new deck
-                allDecks.value = allDecks.value!! + deck
+            if(isValidDeck(deck)) {
+                if (allDecks.value!!.find { it.deckId == deck.deckId } != null) {
+                    // Update existing deck
+                    allDecks.value =
+                        allDecks.value!!.map { if (it.deckId == deck.deckId) deck else it }
+                    viewModelScope.launch {
+                        singleDeckSaver.saveDeck(deck)
+                    }
+                } else {
+                    // Add a new deck
+                    viewModelScope.launch {
+                        val deckWithId = singleDeckSaver.saveDeck(deck)
+                        allDecks.value = allDecks.value!! + deckWithId
+                    }
+                }
             }
 
         }
 
         viewModelScope.launch {
             // Bogus data for testing decks
-            var decks = ArrayList<Deck>()
+            /*var decks = ArrayList<Deck>()
             decks.add(
                 Deck(
                     1, "Animals", "tbd",
@@ -78,7 +89,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             allDecks.value = decks
             // End of bogus data
 
-//            allDecks.value = allDecksGetter.getAllDecks()
+            // */allDecks.value = allDecksGetter.getAllDecks()
+        }
+    }
+
+    fun deleteDeck(deck: Deck) {
+        viewModelScope.launch{
+            allDecks.value = allDecks.value!! - deck
+            singleDeckSaver.deleteDeck(deck)
         }
     }
 

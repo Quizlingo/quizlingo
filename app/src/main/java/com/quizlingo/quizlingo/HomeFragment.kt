@@ -166,7 +166,7 @@ class HomeFragment : Fragment() {
                             commit()
                         }
                     } else if(direction == ItemTouchHelper.RIGHT) {
-                        viewModel.allDecks.value = viewModel.allDecks.value!! - deck
+                        viewModel.deleteDeck(deck)
                         adapter.notifyItemRemoved(viewHolder.adapterPosition)
                     }
 
