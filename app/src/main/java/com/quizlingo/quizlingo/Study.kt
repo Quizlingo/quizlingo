@@ -9,52 +9,21 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import android.widget.Button
-import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-
-import kotlinx.android.synthetic.main.activity_study.*
-import java.security.Permission
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.github.zagum.speechrecognitionview.RecognitionProgressView
-import com.github.zagum.speechrecognitionview.adapters.RecognitionListenerAdapter
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import com.quizlingo.quizlingo.businesslogic.*
-import org.w3c.dom.Text
-
-
-//class Words() {
-//    val words = listOf<String>("butterfly", "tiger", "elephant", "monkey", "dog")
-//    var index = -1;
-//
-//    fun next() : String? {
-//        index++;
-//        if(index >= words.size) {
-//            index = 0
-//        }
-//        return words[index]
-//    }
-//
-//}
 
 class Study : Fragment(), RecognitionListener {
 
@@ -77,10 +46,11 @@ class Study : Fragment(), RecognitionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        var deckk = Deck(0, "Animals", "tbd",
-//            cards = listOf(Card(1, 1, "small animal", "cat")), cardCount = 1)
+
         vm = ViewModelProvider(this).get(MainViewModel::class.java)
         var mld : MutableLiveData<Deck> = vm.currentDeck
+//        var deckk = Deck(0, "Animals", "tbd",
+//            cards = listOf(Card(1, 1, "small animal", "cat")), cardCount = 1)
 //        mld.postValue(deckk)
 
         val restart = view.findViewById<Button>(R.id.restart)
@@ -106,7 +76,6 @@ class Study : Fragment(), RecognitionListener {
 
             // Permission is not granted
             // Should we show an explanation?
-            Log.e(TAG, "ADDING PERMISSION")
             if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(),
                     Manifest.permission.RECORD_AUDIO)) {
                 // Show an explanation to the user *asynchronously* -- don't block
@@ -114,14 +83,12 @@ class Study : Fragment(), RecognitionListener {
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed, we can request the permission.
-                Log.e(TAG, "NO EXP NEEDED")
                 ActivityCompat.requestPermissions(requireActivity(),
                     arrayOf(Manifest.permission.RECORD_AUDIO),
                     AUDIO_PERM_REQ)
             }
         } else {
             // Permission has already been granted
-            Log.e(TAG, "permission already granted")
         }
 //        rpv.setRecognitionListener(object : RecognitionListenerAdapter() {
 //            override fun onResults(results: Bundle) {
@@ -141,7 +108,6 @@ class Study : Fragment(), RecognitionListener {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        Log.e(TAG, "RECEIVED RESPONSE")
         when (requestCode) {
             AUDIO_PERM_REQ -> {
                 // If request is cancelled, the result arrays are empty.
@@ -171,7 +137,6 @@ class Study : Fragment(), RecognitionListener {
         }
 //        if(Permission.)
         speechRecognizer.startListening(intent)
-        Log.e(TAG, "starting up recognizer")
 //        startActivityForResult(intent, SPEECH_REQUEST_CODE)
     }
 
@@ -186,54 +151,52 @@ class Study : Fragment(), RecognitionListener {
     }
 
     private fun finishFlashcards() {
-        Log.e(TAG, "Finished deck")
         card.setText("")
         speechRecognizer.stopListening()
         Toast.makeText(context, "You finished the deck!", Toast.LENGTH_LONG)
     }
 
     override fun onReadyForSpeech(params: Bundle?) {
-        Log.d(TAG, "onReadyForSpeech")
+//        Log.d(TAG, "onReadyForSpeech")
     }
 
     override fun onRmsChanged(rmsdB: Float) {
-        Log.d(TAG, "onRmsChanged")
+//        Log.d(TAG, "onRmsChanged")
     }
 
     override fun onBufferReceived(buffer: ByteArray?) {
-        Log.d(TAG, "onBufferReceived")
+//        Log.d(TAG, "onBufferReceived")
 
     }
 
     override fun onPartialResults(partialResults: Bundle?) {
-        Log.d(TAG, "onPartialResults")
+//        Log.d(TAG, "onPartialResults")
     }
 
     override fun onEvent(eventType: Int, params: Bundle?) {
-        Log.d(TAG, "onEvent $eventType")
+//        Log.d(TAG, "onEvent $eventType")
     }
 
     override fun onBeginningOfSpeech() {
-        Log.d(TAG, "onBeginningOfSpeech")
-        rpv.play();
+//        Log.d(TAG, "onBeginningOfSpeech")
+//        rpv.play();
     }
 
     override fun onEndOfSpeech() {
-        Log.d(TAG, "onEndOfSpeech")
+//        Log.d(TAG, "onEndOfSpeech")
 //        rpv.stop();
 
     }
 
     override fun onError(error: Int) {
-        Log.d(TAG, "onError $error")
+//        Log.d(TAG, "onError $error")
     }
 
     override fun onResults(results: Bundle?) {
-        Log.d(TAG, "onReadyForSpeech")
+//        Log.d(TAG, "onReadyForSpeech")
         val data = results?.getStringArrayList("results_recognition")
 
         val spokenText: String? = if (data != null) data[0] else ""
-        Log.e("DBUG", spokenText)
         var ans = cards.get(current).answer
         if(ans == spokenText!!.toLowerCase()) {
             Toast.makeText(context, "CORRECT!!", Toast.LENGTH_LONG).show()
