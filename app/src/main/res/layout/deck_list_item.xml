@@ -15,6 +15,16 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:textAlignment="center"
+        android:text="Title"
+
+        />
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:text="Description"
 
         />
 </LinearLayout>

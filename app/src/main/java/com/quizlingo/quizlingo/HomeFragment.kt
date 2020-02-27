@@ -2,7 +2,6 @@ package com.quizlingo.quizlingo
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,12 +52,14 @@ class HomeDeckAdapter(
     private val inflater: LayoutInflater =
         context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-    class DeckViewHolder(view: View) :
+    class DeckViewHolder(val view: View) :
         RecyclerView.ViewHolder(view) {
         var title: TextView
+        var desc: TextView
 
         init {
             title = view.findViewById(R.id.title)
+            desc = view.findViewById(R.id.desc)
         }
     }
 
