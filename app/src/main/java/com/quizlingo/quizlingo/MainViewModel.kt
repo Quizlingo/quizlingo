@@ -13,8 +13,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val allDecks: MutableLiveData<List<Deck>> = MutableLiveData()
     val currentDeck: MutableLiveData<Deck> = MutableLiveData()
 
-    private lateinit var allDecksGetter: AllDecksGetter
-    private lateinit var singleDeckSaver: DeckSaver
+    private var allDecksGetter: AllDecksGetter
+    private var singleDeckSaver: DeckSaver
 
     init {
         val db = PersistenceDatabase(application)
