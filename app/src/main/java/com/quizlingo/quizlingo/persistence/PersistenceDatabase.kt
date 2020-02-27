@@ -3,12 +3,11 @@ package com.quizlingo.quizlingo.persistence
 import android.content.Context
 import androidx.room.*
 import com.quizlingo.quizlingo.businesslogic.AllDecksGetter
-import com.quizlingo.quizlingo.businesslogic.DeckInfoGetter
 import com.quizlingo.quizlingo.businesslogic.DeckSaver
 import com.quizlingo.quizlingo.businesslogic.Deck as BusinessDeck
 import com.quizlingo.quizlingo.businesslogic.Card as BusinessCard
 
-class PersistenceDatabase(context: Context): AllDecksGetter, DeckInfoGetter, DeckSaver {
+class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
 
     private val database =
         AppDatabase.getDatabase(
@@ -113,20 +112,6 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckInfoGetter, Dec
                 cards,
                 dbDeck.deckCardCount
             )}
-    }
-
-    override suspend fun getDeckInfo(deckId: Long): BusinessDeck {
-        val dbDeck = decksDao.getDeckById(deckId)
-        val cards = cardsDao.getCardsByDeck(dbDeck.id).map {dbCard ->
-            BusinessCard(dbCard.id, dbCard.deckId, dbCard.cardPrompt, dbCard.cardText)
-        }
-        return BusinessDeck(
-            dbDeck.id,
-            dbDeck.deckTitle,
-            dbDeck.deckDescription,
-            cards,
-            dbDeck.deckCardCount
-        )
     }
 
     override suspend fun saveDeck(deck: BusinessDeck) {
