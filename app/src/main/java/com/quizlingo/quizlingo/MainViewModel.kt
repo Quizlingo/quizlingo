@@ -22,9 +22,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         singleDeckSaver = db
 
         currentDeck.observeForever { deck: Deck ->
-            if (!allDecks.value!!.contains(deck)) {
+            if(allDecks.value!!.find{it.deckId == deck.deckId} != null) {
+                // Update existing deck
+                allDecks.value = allDecks.value!!.map{ if(it.deckId == deck.deckId) deck else it }
+            } else {
+                // Add a new deck
                 allDecks.value = allDecks.value!! + deck
             }
+
         }
 
         viewModelScope.launch {
@@ -37,7 +42,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         Card(1, 1, "small animal", "cat"),
                         Card(2, 1, "flying dairy object", "butterfly"),
                         Card(3, 1, "angry cat", "tiger")
-                    ), cardCount = 3
+                    )
                 )
             )
             decks.add(
@@ -47,7 +52,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         Card(1, 2, "small animal", "cat"),
                         Card(2, 2, "flying dairy object", "butterfly"),
                         Card(3, 2, "angry cat", "tiger")
-                    ), cardCount = 3
+                    )
                 )
             )
             decks.add(
@@ -57,7 +62,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         Card(1, 3, "small animal", "cat"),
                         Card(2, 3, "flying dairy object", "butterfly"),
                         Card(3, 3, "angry cat", "tiger")
-                    ), cardCount = 3
+                    )
                 )
             )
             decks.add(
@@ -67,7 +72,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         Card(1, 4, "small animal", "cat"),
                         Card(2, 4, "flying dairy object", "butterfly"),
                         Card(3, 4, "angry cat", "tiger")
-                    ), cardCount = 3
+                    )
                 )
             )
             allDecks.value = decks

@@ -109,8 +109,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
                 dbDeck.id,
                 dbDeck.deckTitle,
                 dbDeck.deckDescription,
-                cards,
-                dbDeck.deckCardCount
+                cards
             )}
     }
 

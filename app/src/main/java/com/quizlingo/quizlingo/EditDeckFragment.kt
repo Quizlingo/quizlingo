@@ -3,210 +3,181 @@ package com.quizlingo.quizlingo
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ProgressBar
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.*
+import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.quizlingo.quizlingo.businesslogic.Card
 import com.quizlingo.quizlingo.businesslogic.Deck
-import kotlinx.coroutines.launch
+import com.quizlingo.quizlingo.businesslogic.MutableCard
+import com.quizlingo.quizlingo.businesslogic.MutableDeck
+import kotlinx.android.synthetic.main.home_deck_list_item.*
+import java.lang.IllegalArgumentException
 
 class EditDeckFragment : Fragment(){
 
-    private lateinit var viewAdapter: EditCardViewAdapter
-    private lateinit var progressBar: ProgressBar
-    private lateinit var recyclerView: RecyclerView
-
-    data class CardItemModel(val type: ModelType, val card: Card?, val deck: Deck?) {
-        enum class ModelType {
-            DECK, CARD, ADD_BUTTON
-        }
+    companion object {
+        fun getInstance() = EditDeckFragment()
     }
+
+    private lateinit var viewModel: MainViewModel
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var deck: MutableDeck
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = LayoutInflater.from(container?.context)
-            .inflate(R.layout.fragment_edit_deck, container, false)
-
-        progressBar = view.findViewById(R.id.edit_list_loading_bar)
-        recyclerView = view.findViewById(R.id.deck_edit_view)
-        recyclerView.apply{
-            layoutManager = LinearLayoutManager(activity)
-            viewAdapter = EditCardViewAdapter()
-            adapter = viewAdapter
-        }
-
-        return view
-    }
+    ): View? = inflater.inflate(R.layout.fragment_edit_deck, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Log.e("Testing", "show loading bar")
-        showLoadingBar()
-        Log.e("Testing", "hide loading bar")
-        hideLoadingBar()
+        viewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
+        recyclerView = view.findViewById(R.id.deck_edit_view)
+
+        deck = MutableDeck(viewModel.currentDeck.value ?: Deck(0L, "", "", listOf()))
+
+        recyclerView.apply{
+            layoutManager = LinearLayoutManager(activity)
+            adapter = EditViewAdapter()
+        }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
 
-    open class CustomViewHolder(heldView: View) : RecyclerView.ViewHolder(heldView)
-
-    class EditDeckViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
-        val name: EditText = view.findViewById(R.id.edit_deck_name)
-        val description: EditText = view.findViewById(R.id.edit_deck_description)
+        viewModel.currentDeck.value = deck.toDeck()
     }
 
-    class EditCardViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
-        val prompt: EditText = view.findViewById(R.id.edit_prompt)
-        val text: EditText = view.findViewById(R.id.edit_text)
+    abstract inner class EditViewHolder(view: View): RecyclerView.ViewHolder(view)
+
+    inner class EditDeckViewHolder(view: View) : EditViewHolder(view) {
+        private val title: EditText = view.findViewById(R.id.edit_deck_title)
+        private val description: EditText = view.findViewById(R.id.edit_deck_description)
+        private lateinit var deck: MutableDeck
+
+        fun setDeck(deck: MutableDeck) {
+            this.deck = deck
+            title.setText(deck.title)
+            description.setText(deck.description)
+
+            title.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    deck.title = s.toString()
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                }
+
+            })
+
+            description.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    deck.description = s.toString()
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                }
+
+            })
+        }
 
     }
 
-    class AddItemViewHolder(view: ConstraintLayout) : CustomViewHolder(view) {
+    inner class EditCardViewHolder(view: View) : EditViewHolder(view) {
+        private val prompt: EditText = view.findViewById(R.id.edit_card_prompt)
+        private val text: EditText = view.findViewById(R.id.edit_card_text)
+        private lateinit var card: MutableCard
+
+        fun setCard(card: MutableCard) {
+            this.card = card
+            prompt.setText(card.prompt)
+            text.setText(card.answer)
+
+            prompt.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    card.prompt = s.toString()
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                }
+
+            })
+
+            text.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    card.answer = s.toString()
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                }
+
+            })
+        }
+    }
+
+    inner class AddCardViewHolder(view: View) : EditViewHolder(view) {
         val button: Button = view.findViewById(R.id.add_item_button)
     }
 
-    class EditCardViewAdapter: RecyclerView.Adapter<CustomViewHolder>() {
+    inner class EditViewAdapter: RecyclerView.Adapter<EditViewHolder>() {
 
-        private val addButton = CardItemModel(CardItemModel.ModelType.ADD_BUTTON, null, null)
-        private var deck : CardItemModel? = null
-        private var cards : List<CardItemModel>? = null
-        private var data: List<CardItemModel> = listOf(addButton)
-
-        var cardCreator: View.OnClickListener? = null
-
-        private fun rebuildData() {
-            data = if(deck != null && cards != null) {
-                listOf(deck!!) + cards!! + addButton
-            } else {
-                listOf(addButton)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EditViewHolder {
+            val inflater = LayoutInflater.from(requireActivity())
+            return when(viewType) {
+                R.layout.edit_deck_list_item -> EditDeckViewHolder(inflater.inflate(viewType, parent, false))
+                R.layout.edit_card_list_item -> EditCardViewHolder(inflater.inflate(viewType, parent, false))
+                R.layout.edit_add_list_item -> AddCardViewHolder(inflater.inflate(viewType, parent, false))
+                else -> throw IllegalArgumentException("Invalid view type")
             }
-            notifyDataSetChanged()
         }
 
-        fun updateCards(cards: List<Card>) {
-            this.cards = cards.map{ CardItemModel(CardItemModel.ModelType.CARD, it, null) }
-            rebuildData()
-        }
-
-        fun updateDeck(deck: Deck) {
-            this.deck = CardItemModel(CardItemModel.ModelType.DECK, null, deck)
-            rebuildData()
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
-            val inflater: LayoutInflater = LayoutInflater.from(parent.context)
-            return when(CardItemModel.ModelType.values()[viewType]) {
-                CardItemModel.ModelType.DECK -> {
-                    val view = inflater.inflate(R.layout.deck_edit_item, parent,false) as ConstraintLayout
-                    EditDeckViewHolder(view)
+        override fun onBindViewHolder(holder: EditViewHolder, position: Int) {
+            when(holder) {
+                is EditDeckViewHolder -> {
+                    holder.setDeck(deck)
                 }
-                CardItemModel.ModelType.CARD -> {
-                    val view = inflater.inflate(R.layout.card_edit_item, parent, false) as ConstraintLayout
-                    EditCardViewHolder(view)
+                is EditCardViewHolder -> {
+                    holder.setCard(deck.cards[position-1])
                 }
-                CardItemModel.ModelType.ADD_BUTTON -> {
-                    val view = inflater.inflate(R.layout.add_list_item, parent ,false) as ConstraintLayout
-                    AddItemViewHolder(view)
+                is AddCardViewHolder -> {
+                    holder.button.setOnClickListener{
+                        deck.cards.add(MutableCard(Card(0L, deck.deckId, "", "")))
+                        notifyItemInserted(deck.cards.size)
+                    }
                 }
             }
         }
 
-        override fun onBindViewHolder(
-            holder: CustomViewHolder,
-            position: Int
-        ) {
-            val item = data[position]
-        }
-
-        /*
-        override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
-            val item = data[position]
-
-            when(item.type) {
-                CardItemModel.ModelType.DECK -> {
-                    val holder = holder as EditDeckViewHolder
-                    val deck = item.deck!!
-                    holder.name.setText(deck.deckName)
-                    holder.description.setText(deck.deckDescription)
-
-                    holder.name.addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {
-                            deck.deckName = s.toString()
-                        }
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                        }
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        }
-                    })
-                    holder.description.addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {
-                            deck.deckDescription = s.toString()
-                        }
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                        }
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        }
-                    })
-                }
-                CardItemModel.ModelType.CARD -> {
-                    val holder = holder as EditCardViewHolder
-                    val card = item.card!!
-                    holder.prompt.setText(card.cardPrompt)
-                    holder.text.setText(card.cardText)
-
-                    holder.prompt.addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {
-                            card.cardPrompt = s.toString()
-                        }
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                        }
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        }
-                    })
-
-                    holder.text.addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {
-                            card.cardText = s.toString()
-                        }
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                        }
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        }
-                    })
-                }
-                CardItemModel.ModelType.ADD_BUTTON -> {
-                    val holder = holder as AddItemViewHolder
-                    if(cardCreator != null)
-                        holder.button.setOnClickListener(cardCreator)
-                }
+        override fun getItemViewType(pos: Int): Int {
+            return when(pos) {
+                0 -> R.layout.edit_deck_list_item
+                deck.cardCount + 1 -> R.layout.edit_add_list_item
+                else -> R.layout.edit_card_list_item
             }
         }
-         */
 
-        override fun getItemCount(): Int = data.size
+        override fun getItemCount(): Int = deck.cardCount + 2
 
-        override fun getItemViewType(pos: Int) = data[pos].type.ordinal
     }
 
-    private fun showLoadingBar() {
-        progressBar.visibility = View.VISIBLE
-        recyclerView.visibility = View.GONE
-    }
-
-    private fun hideLoadingBar() {
-        progressBar.visibility = View.GONE
-        recyclerView.visibility = View.VISIBLE
-    }
 }

@@ -4,6 +4,8 @@ data class Deck(
     val deckId: Long,
     val title: String,
     val description: String,
-    val cards: List<Card>,
+    val cards: List<Card>
+    ) {
     val cardCount: Int
-)
+        get() = cards.size
+}
