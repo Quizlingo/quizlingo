@@ -1,7 +1,6 @@
 package com.quizlingo.quizlingo
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -18,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -29,12 +27,12 @@ class Study : Fragment(), RecognitionListener {
 
     private val TAG = "SPEECH_REC"
     private val AUDIO_PERM_REQ = 1000
-    private lateinit var vm : MainViewModel
-    private lateinit var deck : Deck
-    private lateinit var cards : List<Card>
-    private lateinit var rpv : RecognitionProgressView
-    private lateinit var speechRecognizer : SpeechRecognizer
-    private lateinit var card : TextView
+    private lateinit var vm: MainViewModel
+    private lateinit var deck: Deck
+    private lateinit var cards: List<Card>
+    private lateinit var rpv: RecognitionProgressView
+    private lateinit var speechRecognizer: SpeechRecognizer
+    private lateinit var card: TextView
     private var current = 0;
 
     override fun onCreateView(
@@ -46,12 +44,8 @@ class Study : Fragment(), RecognitionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        vm = ViewModelProvider(this).get(MainViewModel::class.java)
-        var mld : MutableLiveData<Deck> = vm.currentDeck
-//        var deckk = Deck(0, "Animals", "tbd",
-//            cards = listOf(Card(1, 1, "small animal", "cat")), cardCount = 1)
-//        mld.postValue(deckk)
+        vm = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
+        var mld: MutableLiveData<Deck> = vm.currentDeck
 
         val restart = view.findViewById<Button>(R.id.restart)
         var title = view.findViewById<TextView>(R.id.title)
@@ -63,29 +57,37 @@ class Study : Fragment(), RecognitionListener {
 //        rpv.setSpeechRecognizer(speechRecognizer)
 
         title.setText("Waiting for deck to load...")
-        mld?.observe(viewLifecycleOwner, Observer {d ->
+        mld.observe(viewLifecycleOwner, Observer { d ->
             deck = d
             title.setText(d.title)
             cards = d.cards
             startFlashcards()
         })
 
-        if (ContextCompat.checkSelfPermission( context!!,
-                Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                context!!,
+                Manifest.permission.RECORD_AUDIO
+            )
+            != PackageManager.PERMISSION_GRANTED
+        ) {
 
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(),
-                    Manifest.permission.RECORD_AUDIO)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    requireActivity(),
+                    Manifest.permission.RECORD_AUDIO
+                )
+            ) {
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(requireActivity(),
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
                     arrayOf(Manifest.permission.RECORD_AUDIO),
-                    AUDIO_PERM_REQ)
+                    AUDIO_PERM_REQ
+                )
             }
         } else {
             // Permission has already been granted
@@ -106,8 +108,10 @@ class Study : Fragment(), RecognitionListener {
         rpv.play()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
         when (requestCode) {
             AUDIO_PERM_REQ -> {
                 // If request is cancelled, the result arrays are empty.
@@ -132,8 +136,10 @@ class Study : Fragment(), RecognitionListener {
     private fun displaySpeechRecognizer() {
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
         }
 //        if(Permission.)
         speechRecognizer.startListening(intent)
@@ -141,10 +147,9 @@ class Study : Fragment(), RecognitionListener {
     }
 
     private fun startFlashcards() {
-        if(deck.cardCount == current) {
+        if (deck.cardCount == current) {
             finishFlashcards()
-        }
-        else {
+        } else {
             card.setText(cards.get(current).prompt)
             displaySpeechRecognizer()
         }
@@ -198,12 +203,11 @@ class Study : Fragment(), RecognitionListener {
 
         val spokenText: String? = if (data != null) data[0] else ""
         var ans = cards.get(current).answer
-        if(ans == spokenText!!.toLowerCase()) {
+        if (ans == spokenText!!.toLowerCase()) {
             Toast.makeText(context, "CORRECT!!", Toast.LENGTH_LONG).show()
             current++
             startFlashcards()
-        }
-        else {
+        } else {
             Toast.makeText(context, "Thats wrong, try again!", Toast.LENGTH_LONG).show()
         }
     }
