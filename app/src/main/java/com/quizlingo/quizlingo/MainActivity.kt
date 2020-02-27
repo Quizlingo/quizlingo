@@ -2,11 +2,7 @@ package com.quizlingo.quizlingo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.lifecycle.ViewModelProvider
-import com.quizlingo.quizlingo.businesslogic.Deck
-import java.util.*
-import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
@@ -18,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
         supportFragmentManager.beginTransaction()
-            .add(R.id.fragment_container, HomeFragment())
+            .add(R.id.content, HomeFragment())
             .commit()
     }
 }
