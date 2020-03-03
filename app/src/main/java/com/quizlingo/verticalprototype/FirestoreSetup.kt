@@ -24,7 +24,7 @@ class FirestoreSetup : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_firestoreSetup)
+        setContentView(R.layout.activity_firestore_setup)
 
         nameTextView = findViewById(R.id.name)
 
