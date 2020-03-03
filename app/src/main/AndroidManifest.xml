@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.quizlingo.verticalprototype" >
+    package="com.quizlingo.verticalprototype">
 
     <application
         android:allowBackup="true"
@@ -10,6 +10,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity android:name=".StudyActivity" >
+
+        <activity android:name=".FirestoreSetup" >
+        <activity android:name=".EditDeckActivity"></activity>
+        <activity android:name=".ShowDecksActivity" />
+        <activity android:name=".AuthDemoActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
