@@ -24,14 +24,14 @@ class Words() {
 
 }
 
-class MainActivity : AppCompatActivity() {
+class StudyActivity : AppCompatActivity() {
 
     private val SPEECH_REQUEST_CODE = 0;
     private var words = Words();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.study_layout)
 
         findViewById<Button>(R.id.button).setOnClickListener {
             displaySpeechRecognizer()
