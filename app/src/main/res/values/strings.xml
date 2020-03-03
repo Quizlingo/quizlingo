@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Quizlingo</string>
+    <string name="edit_card_prompt">Prompt</string>
+    <string name="edit_card_text">Text</string>
+    <string name="edit_deck_title">Title</string>
+    <string name="edit_deck_description">Description</string>
 </resources>

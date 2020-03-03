@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/cardview_dark_background"
+
+    >
+
+    <EditText
+        android:id="@+id/edit_deck_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:backgroundTint="@android:color/white"
+        android:textColorHint="@android:color/white"
+        android:textColor="@android:color/white"
+        android:textSize="20pt"
+
+        android:layout_margin="10dp"
+
+        android:hint="@string/edit_deck_title"
+        />
+
+    <EditText
+        android:id="@+id/edit_deck_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:backgroundTint="@android:color/white"
+        android:textColorHint="@android:color/white"
+        android:textColor="@android:color/white"
+        android:textSize="12pt"
+
+        android:layout_margin="10dp"
+
+        android:lines="1"
+
+        android:hint="@string/edit_deck_description"
+        />
+
+</LinearLayout>

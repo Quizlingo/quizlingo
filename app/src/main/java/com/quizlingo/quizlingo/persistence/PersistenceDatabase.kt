@@ -20,8 +20,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
     data class Deck(
         @PrimaryKey(autoGenerate = true) val id: Long,
         @ColumnInfo(name = "deck_title") var deckTitle: String,
-        @ColumnInfo(name = "deck_description") var deckDescription: String,
-        @ColumnInfo(name = "deck_card_count") var deckCardCount: Int
+        @ColumnInfo(name = "deck_description") var deckDescription: String
     )
 
     @Entity(tableName = "cards")
@@ -56,7 +55,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
         suspend fun getCardsByDeck(deckId: Long): List<Card>
 
         @Insert(onConflict =  OnConflictStrategy.REPLACE)
-        suspend fun insertMany(card: List<Card>)
+        suspend fun insert(card: Card): Long
 
         @Update
         suspend fun updateMany(cards: List<Card>)
@@ -65,7 +64,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
         suspend fun deleteMany(cards: List<Card>)
 
         @Transaction
-        suspend fun updateCardsForDeck(deckId: Long, cards: List<Card>) {
+        suspend fun updateCardsForDeck(deckId: Long, cards: List<Card>): List<Card> {
             val inDb = getCardsByDeck(deckId)
 
             val toDelete = inDb - cards
@@ -73,8 +72,16 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
             val toUpdate = cards - toAdd
 
             deleteMany(toDelete)
-            insertMany(toAdd)
+
+            val added = mutableListOf<Card>()
+            toAdd.forEach{
+                val newId = insert(it)
+                added.add(Card(newId, it.deckId, it.cardPrompt, it.cardText))
+            }
+
             updateMany(toUpdate)
+
+            return (toUpdate + toAdd).sortedBy { it.id }
         }
     }
 
@@ -109,18 +116,16 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
                 dbDeck.id,
                 dbDeck.deckTitle,
                 dbDeck.deckDescription,
-                cards,
-                dbDeck.deckCardCount
+                cards
             )}
     }
 
-    override suspend fun saveDeck(deck: BusinessDeck) {
+    override suspend fun saveDeck(deck: BusinessDeck): BusinessDeck {
         val dbDeck =
             Deck(
                 deck.deckId,
                 deck.title,
-                deck.description,
-                deck.cardCount
+                deck.description
             )
         var deckId = dbDeck.id
         if(deck.deckId == 0L) {
@@ -138,8 +143,9 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
             )
         }
 
-        cardsDao.updateCardsForDeck(deck.deckId, dbCards)
+        val cards = cardsDao.updateCardsForDeck(deck.deckId, dbCards).map{card-> BusinessCard(card.id, deckId, card.cardPrompt, card.cardText)}
 
+        return BusinessDeck(deckId, deck.title, deck.description, cards)
     }
 
     override suspend fun deleteDeck(deck: BusinessDeck) {
@@ -147,8 +153,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
             Deck(
                 deck.deckId,
                 deck.title,
-                deck.description,
-                deck.cardCount
+                deck.description
             )
         val dbCards = deck.cards.map{card ->
             Card(
