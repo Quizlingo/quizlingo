@@ -49,6 +49,7 @@ class StudyActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == SPEECH_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val spokenText: String? =
                 if(data != null)
@@ -67,6 +68,5 @@ class StudyActivity : AppCompatActivity() {
             }
             // Do something with spokenText
         }
-//        super.onActivityResult(requestCode, resultCode, data)
     }
 }
