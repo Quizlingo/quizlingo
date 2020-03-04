@@ -1,5 +1,8 @@
 package com.quizlingo.quizlingo
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,19 +11,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.quizlingo.quizlingo.businesslogic.Card
 import com.quizlingo.quizlingo.businesslogic.Deck
 import com.quizlingo.quizlingo.businesslogic.MutableCard
 import com.quizlingo.quizlingo.businesslogic.MutableDeck
-import kotlinx.android.synthetic.main.home_deck_list_item.*
 import java.lang.IllegalArgumentException
 
-class EditDeckFragment : Fragment(){
+class EditDeckFragment : Fragment() {
 
     companion object {
         fun getInstance() = EditDeckFragment()
@@ -29,6 +31,8 @@ class EditDeckFragment : Fragment(){
     private lateinit var viewModel: MainViewModel
     private lateinit var recyclerView: RecyclerView
     private lateinit var deck: MutableDeck
+
+    private lateinit var editViewAdapter: EditViewAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,10 +48,15 @@ class EditDeckFragment : Fragment(){
 
         deck = MutableDeck(viewModel.currentDeck.value ?: Deck(0L, "", "", listOf()))
 
-        recyclerView.apply{
+        editViewAdapter = EditViewAdapter()
+
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
-            adapter = EditViewAdapter()
+            adapter = editViewAdapter
         }
+
+        val itemTouchHelper = ItemTouchHelper(EditorTouchHelperCallback())
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     override fun onDestroyView() {
@@ -56,7 +65,96 @@ class EditDeckFragment : Fragment(){
         viewModel.currentDeck.value = deck.toDeck()
     }
 
-    abstract inner class EditViewHolder(view: View): RecyclerView.ViewHolder(view)
+    inner class EditorTouchHelperCallback : ItemTouchHelper.SimpleCallback(
+        /*ItemTouchHelper.UP or ItemTouchHelper.DOWN*/ 0,
+        ItemTouchHelper.RIGHT
+    ) {
+        private val deleteIcon = requireActivity().getDrawable(R.drawable.ic_delete_white_24dp)
+        private val deleteBackground = ColorDrawable(Color.RED)
+
+        override fun getSwipeDirs(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder
+        ): Int {
+            return if(viewHolder is EditCardViewHolder) super.getSwipeDirs(recyclerView, viewHolder) else 0
+        }
+
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            if(viewHolder is EditCardViewHolder && direction == ItemTouchHelper.RIGHT) {
+                deck.cards.remove(viewHolder.card)
+                editViewAdapter.notifyItemRemoved(viewHolder.adapterPosition)
+            }
+        }
+
+        override fun onChildDraw(
+            c: Canvas,
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            dX: Float,
+            dY: Float,
+            actionState: Int,
+            isCurrentlyActive: Boolean
+        ) {
+            super.onChildDraw(
+                c,
+                recyclerView,
+                viewHolder,
+                dX,
+                dY,
+                actionState,
+                isCurrentlyActive
+            )
+
+            var icon = deleteIcon!!
+            var background = deleteBackground
+
+            // Copy-pasted from: https://medium.com/@zackcosborn/step-by-step-recyclerview-swipe-to-delete-and-undo-7bbae1fce27e
+            val itemView = viewHolder.itemView
+            val backgroundCornerOffset = 20
+
+            val iconMargin = (itemView.height - icon.intrinsicHeight) / 2
+            val iconTop =
+                itemView.top + (itemView.height - icon.intrinsicHeight) / 2
+            val iconBottom = iconTop + icon.intrinsicHeight
+
+            if (dX > 0) { // Swiping to the right
+                val iconLeft = itemView.left + iconMargin
+                val iconRight = itemView.left + iconMargin + icon.intrinsicWidth
+
+                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                background.setBounds(
+                    itemView.left, itemView.top,
+                    itemView.left + dX.toInt() + backgroundCornerOffset,
+                    itemView.bottom
+                )
+            } else if (dX < 0) { // Swiping to the left
+
+                val iconLeft = itemView.right - iconMargin - icon.intrinsicWidth
+                val iconRight = itemView.right - iconMargin
+                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                background.setBounds(
+                    itemView.right + dX.toInt() - backgroundCornerOffset,
+                    itemView.top, itemView.right, itemView.bottom
+                )
+            } else { // view is unSwiped
+                background.setBounds(0, 0, 0, 0)
+            }
+
+            background.draw(c)
+            icon.draw(c)
+        }
+
+    }
+
+    abstract inner class EditViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
     inner class EditDeckViewHolder(view: View) : EditViewHolder(view) {
         private val title: EditText = view.findViewById(R.id.edit_deck_title)
@@ -73,7 +171,12 @@ class EditDeckFragment : Fragment(){
                     deck.title = s.toString()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -86,7 +189,12 @@ class EditDeckFragment : Fragment(){
                     deck.description = s.toString()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -100,19 +208,19 @@ class EditDeckFragment : Fragment(){
     inner class EditCardViewHolder(view: View) : EditViewHolder(view) {
         private val prompt: EditText = view.findViewById(R.id.edit_card_prompt)
         private val text: EditText = view.findViewById(R.id.edit_card_text)
-        private lateinit var card: MutableCard
 
-        fun setCard(card: MutableCard) {
-            this.card = card
-            prompt.setText(card.prompt)
-            text.setText(card.answer)
-
+        init {
             prompt.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    card.prompt = s.toString()
+                    _card.prompt = s.toString()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -122,10 +230,15 @@ class EditDeckFragment : Fragment(){
 
             text.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    card.answer = s.toString()
+                    _card.answer = s.toString()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -133,34 +246,63 @@ class EditDeckFragment : Fragment(){
 
             })
         }
+
+        private lateinit var _card: MutableCard
+
+        val card
+            get() = _card
+
+        fun setCard(card: MutableCard) {
+            this._card = card
+            prompt.setText(card.prompt)
+            text.setText(card.answer)
+        }
     }
 
     inner class AddCardViewHolder(view: View) : EditViewHolder(view) {
         val button: Button = view.findViewById(R.id.add_item_button)
     }
 
-    inner class EditViewAdapter: RecyclerView.Adapter<EditViewHolder>() {
+    inner class EditViewAdapter : RecyclerView.Adapter<EditViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EditViewHolder {
             val inflater = LayoutInflater.from(requireActivity())
-            return when(viewType) {
-                R.layout.edit_deck_list_item -> EditDeckViewHolder(inflater.inflate(viewType, parent, false))
-                R.layout.edit_card_list_item -> EditCardViewHolder(inflater.inflate(viewType, parent, false))
-                R.layout.edit_add_list_item -> AddCardViewHolder(inflater.inflate(viewType, parent, false))
+            return when (viewType) {
+                R.layout.edit_deck_list_item -> EditDeckViewHolder(
+                    inflater.inflate(
+                        viewType,
+                        parent,
+                        false
+                    )
+                )
+                R.layout.edit_card_list_item -> EditCardViewHolder(
+                    inflater.inflate(
+                        viewType,
+                        parent,
+                        false
+                    )
+                )
+                R.layout.edit_add_list_item -> AddCardViewHolder(
+                    inflater.inflate(
+                        viewType,
+                        parent,
+                        false
+                    )
+                )
                 else -> throw IllegalArgumentException("Invalid view type")
             }
         }
 
         override fun onBindViewHolder(holder: EditViewHolder, position: Int) {
-            when(holder) {
+            when (holder) {
                 is EditDeckViewHolder -> {
                     holder.setDeck(deck)
                 }
                 is EditCardViewHolder -> {
-                    holder.setCard(deck.cards[position-1])
+                    holder.setCard(deck.cards[position - 1])
                 }
                 is AddCardViewHolder -> {
-                    holder.button.setOnClickListener{
+                    holder.button.setOnClickListener {
                         deck.cards.add(MutableCard(Card(0L, deck.deckId, "", "")))
                         notifyItemInserted(deck.cards.size)
                     }
@@ -169,7 +311,7 @@ class EditDeckFragment : Fragment(){
         }
 
         override fun getItemViewType(pos: Int): Int {
-            return when(pos) {
+            return when (pos) {
                 0 -> R.layout.edit_deck_list_item
                 deck.cardCount + 1 -> R.layout.edit_add_list_item
                 else -> R.layout.edit_card_list_item
