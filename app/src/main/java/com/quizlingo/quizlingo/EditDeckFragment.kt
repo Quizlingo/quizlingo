@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,12 +62,12 @@ class EditDeckFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-
+        deck.cards.forEachIndexed{idx, card -> card.order = idx}
         viewModel.currentDeck.value = deck.toDeck()
     }
 
     inner class EditorTouchHelperCallback : ItemTouchHelper.SimpleCallback(
-        /*ItemTouchHelper.UP or ItemTouchHelper.DOWN*/ 0,
+        ItemTouchHelper.UP or ItemTouchHelper.DOWN,
         ItemTouchHelper.RIGHT
     ) {
         private val deleteIcon = requireActivity().getDrawable(R.drawable.ic_delete_white_24dp)
@@ -84,7 +85,17 @@ class EditDeckFragment : Fragment() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            return if(viewHolder is EditCardViewHolder && target is EditCardViewHolder) {
+                if(deck.cards.remove(viewHolder.card)) {
+                    deck.cards.add(target.adapterPosition - 1, viewHolder.card)
+                    editViewAdapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+                } else {
+                    Log.e("EditDeckFragment", "Tried to move card not in deck")
+                }
+                true
+            } else {
+                false
+            }
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -303,7 +314,7 @@ class EditDeckFragment : Fragment() {
                 }
                 is AddCardViewHolder -> {
                     holder.button.setOnClickListener {
-                        deck.cards.add(MutableCard(Card(0L, deck.deckId, "", "")))
+                        deck.cards.add(MutableCard(Card(0L, deck.deckId, "", "", 0)))
                         notifyItemInserted(deck.cards.size)
                     }
                 }

@@ -16,6 +16,12 @@ android {
         versionCode 2
         versionName "0.2.0-alpha"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation" : "$projectDir/schemas".toString()]
+            }
+        }
     }
     buildTypes {
         release {

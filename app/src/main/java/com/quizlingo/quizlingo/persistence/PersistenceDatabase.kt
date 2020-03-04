@@ -2,6 +2,8 @@ package com.quizlingo.quizlingo.persistence
 
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.quizlingo.quizlingo.businesslogic.AllDecksGetter
 import com.quizlingo.quizlingo.businesslogic.DeckSaver
 import com.quizlingo.quizlingo.businesslogic.Deck as BusinessDeck
@@ -28,7 +30,8 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
         @PrimaryKey(autoGenerate = true) val id: Long,
         @ColumnInfo(name = "deck_id") val deckId: Long,
         @ColumnInfo(name = "card_prompt") var cardPrompt: String,
-        @ColumnInfo(name = "card_text") var cardText: String
+        @ColumnInfo(name = "card_text") var cardText: String,
+        @ColumnInfo(name = "card_order") var cardOrder: Int
     )
 
     @Dao
@@ -51,7 +54,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
 
     @Dao
     interface CardsDao {
-        @Query("SELECT * FROM cards WHERE deck_id LIKE :deckId ORDER BY id ASC")
+        @Query("SELECT * FROM cards WHERE deck_id LIKE :deckId ORDER BY card_order ASC, id ASC")
         suspend fun getCardsByDeck(deckId: Long): List<Card>
 
         @Insert(onConflict =  OnConflictStrategy.REPLACE)
@@ -76,7 +79,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
             val added = mutableListOf<Card>()
             toAdd.forEach{
                 val newId = insert(it)
-                added.add(Card(newId, it.deckId, it.cardPrompt, it.cardText))
+                added.add(Card(newId, it.deckId, it.cardPrompt, it.cardText, it.cardOrder))
             }
 
             updateMany(toUpdate)
@@ -85,13 +88,20 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
         }
     }
 
-    @Database(entities = [Deck::class, Card::class], version = 1)
+    @Database(entities = [Deck::class, Card::class], version = 2)
     abstract class AppDatabase: RoomDatabase() {
         abstract fun decksDao(): DecksDao
         abstract fun cardsDao(): CardsDao
 
         companion object {
             private var instance: AppDatabase? = null
+
+            private val MIGRATION_1_2 = object : Migration(1, 2) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("ALTER TABLE `cards` ADD COLUMN `card_order` INTEGER NOT NULL DEFAULT 0")
+                }
+            }
+
             fun getDatabase(context: Context): AppDatabase {
                 var tempInstance =
                     instance
@@ -99,7 +109,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
                     return tempInstance
                 }
                 synchronized(this) {
-                    tempInstance = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "decks.db").build()
+                    tempInstance = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "decks.db").addMigrations(MIGRATION_1_2).build()
                     instance = tempInstance
                     return tempInstance!!
                 }
@@ -110,7 +120,7 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
     override suspend fun getAllDecks(): List<BusinessDeck> {
         return decksDao.getDecks().map{ dbDeck ->
             val cards = cardsDao.getCardsByDeck(dbDeck.id).map{ dbCard ->
-                BusinessCard(dbCard.id, dbCard.deckId, dbCard.cardPrompt, dbCard.cardText)
+                BusinessCard(dbCard.id, dbCard.deckId, dbCard.cardPrompt, dbCard.cardText, dbCard.cardOrder)
             }
             BusinessDeck(
                 dbDeck.id,
@@ -139,11 +149,12 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
                 card.id,
                 deckId,
                 card.prompt,
-                card.answer
+                card.answer,
+                card.order
             )
         }
 
-        val cards = cardsDao.updateCardsForDeck(deck.deckId, dbCards).map{card-> BusinessCard(card.id, deckId, card.cardPrompt, card.cardText)}
+        val cards = cardsDao.updateCardsForDeck(deck.deckId, dbCards).map{card-> BusinessCard(card.id, deckId, card.cardPrompt, card.cardText, card.cardOrder)}
 
         return BusinessDeck(deckId, deck.title, deck.description, cards)
     }
@@ -160,7 +171,8 @@ class PersistenceDatabase(context: Context): AllDecksGetter, DeckSaver {
                 card.id,
                 card.deckId,
                 card.prompt,
-                card.answer
+                card.answer,
+                card.order
             )
         }
 
