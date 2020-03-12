@@ -8,4 +8,10 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="ListItem">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_margin">20dp</item>
+        <item name="android:background">#FFFFFF</item>
+    </style>
+
 </resources>

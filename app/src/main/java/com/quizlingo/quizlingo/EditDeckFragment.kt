@@ -8,10 +8,12 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -32,6 +34,7 @@ class EditDeckFragment : Fragment() {
     private lateinit var viewModel: MainViewModel
     private lateinit var recyclerView: RecyclerView
     private lateinit var deck: MutableDeck
+    private lateinit var itemTouchHelper: ItemTouchHelper
 
     private lateinit var editViewAdapter: EditViewAdapter
 
@@ -56,7 +59,7 @@ class EditDeckFragment : Fragment() {
             adapter = editViewAdapter
         }
 
-        val itemTouchHelper = ItemTouchHelper(EditorTouchHelperCallback())
+        itemTouchHelper = ItemTouchHelper(EditorTouchHelperCallback())
         itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
@@ -164,6 +167,8 @@ class EditDeckFragment : Fragment() {
             icon.draw(c)
         }
 
+        override fun isLongPressDragEnabled() = false
+
     }
 
     abstract inner class EditViewHolder(view: View) : RecyclerView.ViewHolder(view)
@@ -220,6 +225,7 @@ class EditDeckFragment : Fragment() {
     inner class EditCardViewHolder(view: View) : EditViewHolder(view) {
         private val prompt: EditText = view.findViewById(R.id.edit_card_prompt)
         private val text: EditText = view.findViewById(R.id.edit_card_text)
+        private val dragHandle : ImageView = view.findViewById(R.id.edit_card_drag_bar)
 
         private val promptChangeListener = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -257,9 +263,19 @@ class EditDeckFragment : Fragment() {
 
         }
 
+        private val dragStartListener = { _: View?, event: MotionEvent? ->
+            if (event?.actionMasked == MotionEvent.ACTION_DOWN) {
+                itemTouchHelper.startDrag(this@EditCardViewHolder)
+                true
+            } else {
+                false
+            }
+        }
+
         init {
             prompt.addTextChangedListener(promptChangeListener)
             text.addTextChangedListener(answerChangeListener)
+            dragHandle.setOnTouchListener(dragStartListener)
         }
 
         private lateinit var _card: MutableCard
