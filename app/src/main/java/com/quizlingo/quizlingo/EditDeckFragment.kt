@@ -66,6 +66,7 @@ class EditDeckFragment : Fragment() {
         viewModel.currentDeck.value = deck.toDeck()
     }
 
+
     inner class EditorTouchHelperCallback : ItemTouchHelper.SimpleCallback(
         ItemTouchHelper.UP or ItemTouchHelper.DOWN,
         ItemTouchHelper.RIGHT
@@ -220,42 +221,45 @@ class EditDeckFragment : Fragment() {
         private val prompt: EditText = view.findViewById(R.id.edit_card_prompt)
         private val text: EditText = view.findViewById(R.id.edit_card_text)
 
+        private val promptChangeListener = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                _card.prompt = s.toString()
+            }
+
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+        }
+
+        private val answerChangeListener = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                _card.answer = s.toString()
+            }
+
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+        }
+
         init {
-            prompt.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                    _card.prompt = s.toString()
-                }
-
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                }
-
-            })
-
-            text.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                    _card.answer = s.toString()
-                }
-
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                }
-
-            })
+            prompt.addTextChangedListener(promptChangeListener)
+            text.addTextChangedListener(answerChangeListener)
         }
 
         private lateinit var _card: MutableCard
