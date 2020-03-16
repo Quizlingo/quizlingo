@@ -16,4 +16,6 @@
     app:layout_constraintLeft_toLeftOf="parent"
 
     tools:listitem="@layout/edit_card_list_item"
+
+    android:layoutAnimation="@anim/layout_animation"
     />
