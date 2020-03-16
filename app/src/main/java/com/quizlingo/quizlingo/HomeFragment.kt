@@ -1,5 +1,6 @@
 package com.quizlingo.quizlingo
 
+import android.R.anim
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -161,6 +162,7 @@ class HomeFragment : Fragment() {
                     if(direction == ItemTouchHelper.LEFT) {
                         viewModel.currentDeck.value = deck
                         parentFragmentManager.beginTransaction().apply {
+                            setCustomAnimations(R.anim.right_in, R.anim.left_out)
                             replace(R.id.content, EditDeckFragment.getInstance())
                             addToBackStack(null)
                             commit()
