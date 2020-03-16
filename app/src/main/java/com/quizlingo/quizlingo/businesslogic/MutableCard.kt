@@ -5,6 +5,7 @@ class MutableCard(card: Card) {
     var deckId: Long = card.deckId
     var prompt: String = card.prompt
     var answer: String = card.answer
+    var order: Int = card.order
 
-    fun toCard() = Card(id, deckId, prompt, answer)
+    fun toCard() = Card(id, deckId, prompt, answer, order)
 }
