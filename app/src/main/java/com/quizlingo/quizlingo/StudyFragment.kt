@@ -1,6 +1,7 @@
 package com.quizlingo.quizlingo
 
 import android.Manifest
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -16,12 +17,14 @@ import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.github.zagum.speechrecognitionview.RecognitionProgressView
 import com.quizlingo.quizlingo.businesslogic.*
+import kotlinx.coroutines.NonCancellable.start
 
 class StudyFragment : Fragment(), RecognitionListener {
 
@@ -38,6 +41,8 @@ class StudyFragment : Fragment(), RecognitionListener {
     private lateinit var recognitionProgressView: RecognitionProgressView
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var card: TextView
+    private lateinit var count: TextView
+    private var promptView : Boolean = true
     private var current = 0
 
     override fun onCreateView(
@@ -56,6 +61,8 @@ class StudyFragment : Fragment(), RecognitionListener {
 
         val restart = view.findViewById<Button>(R.id.restart)
         val title = view.findViewById<TextView>(R.id.title)
+        val frame = view.findViewById<FrameLayout>(R.id.frame)
+        count = view.findViewById<TextView>(R.id.count)
 
         card = view.findViewById(R.id.match)
 
@@ -64,6 +71,27 @@ class StudyFragment : Fragment(), RecognitionListener {
 
         recognitionProgressView.setSpeechRecognizer(speechRecognizer)
         recognitionProgressView.setRecognitionListener(this)
+
+        val anim = ObjectAnimator.ofFloat(frame, "rotationY", 360f).apply {
+            duration = 300
+        }
+
+        frame.setOnClickListener {
+            promptView = !promptView
+            displayCard()
+            anim.start()
+        }
+
+        view.findViewById<Button>(R.id.back).setOnClickListener {
+            if(current > 0) current--
+            displayCard()
+        }
+
+        view.findViewById<Button>(R.id.forward).setOnClickListener {
+            if(current < deck.cardCount-1) current++
+            else current = 0
+            displayCard()
+        }
 
 
         // TODO: Extract string resource
@@ -155,15 +183,26 @@ class StudyFragment : Fragment(), RecognitionListener {
         if (deck.cardCount == current) {
             finishFlashcards()
         } else {
-            card.text = cards[current].prompt
+            displayCard()
             startSpeechRecognition()
         }
     }
 
     private fun finishFlashcards() {
-        card.text = ""
+        current = 0
+        displayCard()
         speechRecognizer.stopListening()
         Toast.makeText(context, "You finished the deck!", Toast.LENGTH_LONG).show()
+    }
+
+    private fun displayCard() {
+        if(promptView) {
+            card.text = cards[current].prompt
+        }
+        else {
+            card.text = cards[current].answer
+        }
+        count.setText("${current+1} / ${deck.cardCount}")
     }
 
     override fun onReadyForSpeech(params: Bundle?) {
@@ -208,13 +247,13 @@ class StudyFragment : Fragment(), RecognitionListener {
         val data = results?.getStringArrayList("results_recognition")
 
         val spokenText: String? = data?.get(0) ?: ""
-        val ans = cards[current].answer
-        if (ans == spokenText!!.toLowerCase()) {
-            Toast.makeText(context, "CORRECT!!", Toast.LENGTH_LONG).show()
+
+        if (spokenText != null && cards[current].match(spokenText)) {
             current++
+            promptView = true
             startFlashcards()
         } else {
-            Toast.makeText(context, "Thats wrong, try again!", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "'"+spokenText + "' is incorrect", Toast.LENGTH_LONG).show()
         }
     }
 }
