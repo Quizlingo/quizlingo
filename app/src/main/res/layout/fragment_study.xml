@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".StudyFragment">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,31 +14,59 @@
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:textAlignment="center"
-            android:background="@color/cardview_dark_background"
-            android:textColor="@android:color/white"
+            android:layout_marginTop="20dp"
+            android:textColor="@android:color/black"
             android:textSize="20pt"
             android:id="@+id/title"/>
+
         <FrameLayout
+            android:id="@+id/frame"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:background="@android:color/holo_blue_dark"
             android:layout_gravity="center"
-            android:layout_margin="40dp">
+            android:layout_margin="40dp"
+            android:background="@android:color/holo_blue_dark">
+
             <TextView
+                android:id="@+id/match"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
                 android:layout_gravity="center"
-                android:textSize="22pt"
                 android:textAlignment="center"
-                android:id="@+id/match"/>
+                android:textColor="@android:color/white"
+                android:textSize="22pt" />
         </FrameLayout>
-        <Button
+
+        <TextView
+            android:id="@+id/count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Restart Voice"
-            android:id="@+id/restart"/>
+            android:text="0 / 0"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <Button
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:id="@+id/back"
+                android:text="BACK"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Restart Voice"
+                android:id="@+id/restart"/>
+            <Button
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:id="@+id/forward"
+                android:text="NEXT"/>
+        </LinearLayout>
+
         <com.github.zagum.speechrecognitionview.RecognitionProgressView
             android:id="@+id/recognition_view"
             android:layout_width="wrap_content"
