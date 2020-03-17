@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,23 +8,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/background"
         android:orientation="vertical">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:textAlignment="center"
-            android:layout_marginTop="20dp"
-            android:textColor="@android:color/black"
-            android:textSize="20pt"
-            android:id="@+id/title"/>
 
-        <FrameLayout
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="20dp"
+            android:textAlignment="center"
+            android:textColor="@android:color/black"
+            android:textSize="20pt" />
+
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/frame"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_gravity="center"
-            android:layout_margin="40dp"
-            android:background="@android:color/holo_blue_dark">
+            android:layout_height="350dp"
+            android:layout_margin="40dp">
 
             <TextView
                 android:id="@+id/match"
@@ -33,45 +32,54 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:textAlignment="center"
-                android:textColor="@android:color/white"
-                android:textSize="22pt" />
-        </FrameLayout>
+                android:textColor="@android:color/black"
+                android:textSize="22pt"
+                tools:text="Match" />
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="0 / 0"/>
+            android:text="0 / 0" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="horizontal">
+
             <Button
-                android:layout_width="70dp"
-                android:layout_height="50dp"
                 android:id="@+id/back"
-                android:text="BACK"/>
+                style="@style/ButtonColor"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:text="BACK" />
+
             <Button
+                android:id="@+id/restart"
+                style="@style/ButtonColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Restart Voice"
-                android:id="@+id/restart"/>
+                android:layout_marginRight="10dp"
+                android:text="Restart Voice" />
+
             <Button
-                android:layout_width="70dp"
-                android:layout_height="50dp"
                 android:id="@+id/forward"
-                android:text="NEXT"/>
+                style="@style/ButtonColor"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="NEXT" />
         </LinearLayout>
 
         <com.github.zagum.speechrecognitionview.RecognitionProgressView
             android:id="@+id/recognition_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
 
     </LinearLayout>
 
