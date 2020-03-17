@@ -7,7 +7,7 @@
         android:id="@+id/deck_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#D8D8D8"
+        android:background="#F8F8F8"
         android:scrollbars="vertical"
         android:layoutAnimation="@anim/layout_animation"/>
 </LinearLayout>
