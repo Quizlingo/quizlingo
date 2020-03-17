@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -297,7 +298,7 @@ class EditDeckFragment : Fragment() {
     }
 
     inner class AddCardViewHolder(view: View) : EditViewHolder(view) {
-        val button: Button = view.findViewById(R.id.add_item_button)
+        val button: ImageButton = view.findViewById(R.id.add_item_button)
     }
 
     inner class EditViewAdapter : RecyclerView.Adapter<EditViewHolder>() {
