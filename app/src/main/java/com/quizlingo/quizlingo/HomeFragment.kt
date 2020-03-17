@@ -51,8 +51,8 @@ class HomeFragment : Fragment() {
             }
         }
 
-        inner class AddDeckViewHolder(view: View): HomePageViewHolder(view) {
-            val button: Button = view.findViewById(R.id.add_item_button)
+        inner class AddDeckViewHolder(view: View) : HomePageViewHolder(view) {
+            val button: ImageButton = view.findViewById(R.id.add_item_button)
         }
 
         fun setDataSource(newDeck: List<Deck>) {
@@ -64,15 +64,27 @@ class HomeFragment : Fragment() {
             parent: ViewGroup,
             viewType: Int
         ): HomePageViewHolder {
-            return when(viewType) {
-                R.layout.home_deck_list_item -> DeckViewHolder(inflater.inflate(R.layout.home_deck_list_item, parent, false))
-                R.layout.edit_add_list_item -> AddDeckViewHolder(inflater.inflate(R.layout.edit_add_list_item, parent, false))
+            return when (viewType) {
+                R.layout.home_deck_list_item -> DeckViewHolder(
+                    inflater.inflate(
+                        R.layout.home_deck_list_item,
+                        parent,
+                        false
+                    )
+                )
+                R.layout.edit_add_list_item -> AddDeckViewHolder(
+                    inflater.inflate(
+                        R.layout.edit_add_list_item,
+                        parent,
+                        false
+                    )
+                )
                 else -> throw IllegalArgumentException()
             }
         }
 
         override fun onBindViewHolder(holder: HomePageViewHolder, position: Int) {
-            when(holder) {
+            when (holder) {
                 is DeckViewHolder -> {
                     val deck: Deck = dataSource[position]
 
@@ -98,7 +110,7 @@ class HomeFragment : Fragment() {
         override fun getItemCount() = dataSource.size + 1
 
         override fun getItemViewType(position: Int): Int {
-            return if(position < dataSource.size) R.layout.home_deck_list_item else R.layout.edit_add_list_item
+            return if (position < dataSource.size) R.layout.home_deck_list_item else R.layout.edit_add_list_item
         }
     }
 
@@ -135,7 +147,8 @@ class HomeFragment : Fragment() {
         list.adapter = adapter
         list.layoutManager = LinearLayoutManager(requireActivity())
 
-        val itemTouchHelper = ItemTouchHelper(object: ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        val itemTouchHelper = ItemTouchHelper(object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             private val editIcon = requireActivity().getDrawable(R.drawable.ic_edit_white_24dp)
             private val editBackground = ColorDrawable(Color.BLUE)
             private val deleteIcon = requireActivity().getDrawable(R.drawable.ic_delete_white_24dp)
@@ -145,7 +158,10 @@ class HomeFragment : Fragment() {
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
-                return if(viewHolder is HomeDeckAdapter.AddDeckViewHolder) 0 else super.getSwipeDirs(recyclerView, viewHolder)
+                return if (viewHolder is HomeDeckAdapter.AddDeckViewHolder) 0 else super.getSwipeDirs(
+                    recyclerView,
+                    viewHolder
+                )
             }
 
             override fun onMove(
@@ -157,9 +173,9 @@ class HomeFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                if(viewHolder is HomeDeckAdapter.DeckViewHolder) {
+                if (viewHolder is HomeDeckAdapter.DeckViewHolder) {
                     val deck = viewHolder.deck
-                    if(direction == ItemTouchHelper.LEFT) {
+                    if (direction == ItemTouchHelper.LEFT) {
                         viewModel.currentDeck.value = deck
                         parentFragmentManager.beginTransaction().apply {
                             setCustomAnimations(R.anim.right_in, R.anim.left_out)
@@ -167,7 +183,7 @@ class HomeFragment : Fragment() {
                             addToBackStack(null)
                             commit()
                         }
-                    } else if(direction == ItemTouchHelper.RIGHT) {
+                    } else if (direction == ItemTouchHelper.RIGHT) {
                         viewModel.deleteDeck(deck)
                         adapter.notifyItemRemoved(viewHolder.adapterPosition)
                     }

@@ -65,7 +65,7 @@ class EditDeckFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        deck.cards.forEachIndexed{idx, card -> card.order = idx}
+        deck.cards.forEachIndexed { idx, card -> card.order = idx }
         viewModel.currentDeck.value = deck.toDeck()
     }
 
@@ -81,7 +81,10 @@ class EditDeckFragment : Fragment() {
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder
         ): Int {
-            return if(viewHolder is EditCardViewHolder) super.getSwipeDirs(recyclerView, viewHolder) else 0
+            return if (viewHolder is EditCardViewHolder) super.getSwipeDirs(
+                recyclerView,
+                viewHolder
+            ) else 0
         }
 
         override fun onMove(
@@ -89,10 +92,13 @@ class EditDeckFragment : Fragment() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            return if(viewHolder is EditCardViewHolder && target is EditCardViewHolder) {
-                if(deck.cards.remove(viewHolder.card)) {
+            return if (viewHolder is EditCardViewHolder && target is EditCardViewHolder) {
+                if (deck.cards.remove(viewHolder.card)) {
                     deck.cards.add(target.adapterPosition - 1, viewHolder.card)
-                    editViewAdapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+                    editViewAdapter.notifyItemMoved(
+                        viewHolder.adapterPosition,
+                        target.adapterPosition
+                    )
                 } else {
                     Log.e("EditDeckFragment", "Tried to move card not in deck")
                 }
@@ -103,7 +109,7 @@ class EditDeckFragment : Fragment() {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            if(viewHolder is EditCardViewHolder && direction == ItemTouchHelper.RIGHT) {
+            if (viewHolder is EditCardViewHolder && direction == ItemTouchHelper.RIGHT) {
                 deck.cards.remove(viewHolder.card)
                 editViewAdapter.notifyItemRemoved(viewHolder.adapterPosition)
             }
@@ -225,7 +231,7 @@ class EditDeckFragment : Fragment() {
     inner class EditCardViewHolder(view: View) : EditViewHolder(view) {
         private val prompt: EditText = view.findViewById(R.id.edit_card_prompt)
         private val text: EditText = view.findViewById(R.id.edit_card_text)
-        private val dragHandle : ImageView = view.findViewById(R.id.edit_card_drag_bar)
+        private val dragHandle: ImageView = view.findViewById(R.id.edit_card_drag_bar)
 
         private val promptChangeListener = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {

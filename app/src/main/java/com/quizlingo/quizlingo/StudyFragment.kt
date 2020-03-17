@@ -9,22 +9,22 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.github.zagum.speechrecognitionview.RecognitionProgressView
-import com.quizlingo.quizlingo.businesslogic.*
-import kotlinx.coroutines.NonCancellable.start
+import com.google.android.material.card.MaterialCardView
+import com.quizlingo.quizlingo.businesslogic.Card
+import com.quizlingo.quizlingo.businesslogic.Deck
 
 class StudyFragment : Fragment(), RecognitionListener {
 
@@ -42,7 +42,7 @@ class StudyFragment : Fragment(), RecognitionListener {
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var card: TextView
     private lateinit var count: TextView
-    private var promptView : Boolean = true
+    private var promptView: Boolean = true
     private var current = 0
 
     override fun onCreateView(
@@ -61,7 +61,7 @@ class StudyFragment : Fragment(), RecognitionListener {
 
         val restart = view.findViewById<Button>(R.id.restart)
         val title = view.findViewById<TextView>(R.id.title)
-        val frame = view.findViewById<FrameLayout>(R.id.frame)
+        val frame = view.findViewById<MaterialCardView>(R.id.frame)
         count = view.findViewById<TextView>(R.id.count)
 
         card = view.findViewById(R.id.match)
@@ -83,12 +83,12 @@ class StudyFragment : Fragment(), RecognitionListener {
         }
 
         view.findViewById<Button>(R.id.back).setOnClickListener {
-            if(current > 0) current--
+            if (current > 0) current--
             displayCard()
         }
 
         view.findViewById<Button>(R.id.forward).setOnClickListener {
-            if(current < deck.cardCount-1) current++
+            if (current < deck.cardCount - 1) current++
             else current = 0
             displayCard()
         }
@@ -196,13 +196,12 @@ class StudyFragment : Fragment(), RecognitionListener {
     }
 
     private fun displayCard() {
-        if(promptView) {
+        if (promptView) {
             card.text = cards[current].prompt
-        }
-        else {
+        } else {
             card.text = cards[current].answer
         }
-        count.setText("${current+1} / ${deck.cardCount}")
+        count.setText("${current + 1} / ${deck.cardCount}")
     }
 
     override fun onReadyForSpeech(params: Bundle?) {
@@ -253,7 +252,7 @@ class StudyFragment : Fragment(), RecognitionListener {
             promptView = true
             startFlashcards()
         } else {
-            Toast.makeText(context, "'"+spokenText + "' is incorrect", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "'" + spokenText + "' is incorrect", Toast.LENGTH_LONG).show()
         }
     }
 }
